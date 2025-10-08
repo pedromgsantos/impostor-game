@@ -1,0 +1,25 @@
+{
+  "type": "pairs",
+  "items": [
+    ["Cristiano Ronaldo", "Lionel Messi"],
+    ["Beyoncé", "Rihanna"],
+    ["Adele", "Taylor Swift"],
+    ["Ed Sheeran", "Bruno Mars"],
+    ["Lady Gaga", "Katy Perry"],
+    ["Billie Eilish", "Olivia Rodrigo"],
+    ["Angelina Jolie", "Scarlett Johansson"],
+    ["Brad Pitt", "Leonardo DiCaprio"],
+    ["Tom Cruise", "Keanu Reeves"],
+    ["Robert Downey Jr.", "Chris Evans"],
+    ["Dwayne Johnson", "Jason Statham"],
+    ["Zendaya", "Emma Stone"],
+    ["Ryan Gosling", "Ryan Reynolds"],
+    ["Will Smith", "Denzel Washington"],
+    ["Selena Gomez", "Ariana Grande"],
+    ["Shakira", "Jennifer Lopez"],
+    ["Pedro Pascal", "Oscar Isaac"],
+    ["Meryl Streep", "Cate Blanchett"],
+    ["Hugh Jackman", "Ben Affleck"],
+    ["Morgan Freeman", "Samuel L. Jackson"]
+  ]
+}

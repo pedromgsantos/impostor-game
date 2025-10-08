@@ -2,11 +2,25 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "jsx": "react-jsx",
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] },
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["vite/client", "react", "react-dom"],
+
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "types": ["vite/client"]
-  }
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "vite.config.ts", "src/types/**/*.d.ts"]
 }

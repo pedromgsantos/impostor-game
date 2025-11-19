@@ -25,6 +25,26 @@ Prerequisites:
 - Node.js 18.18+ or 20+ (the project targets the versions supported by Vite 7)
 - npm 9+
 
+## ¿Cómo copio el proyecto?
+Si todavía no tienes el código en tu máquina, puedes obtenerlo de dos maneras:
+
+1. **Clonando con Git** (recomendado para contribuir):
+
+   ```bash
+   # Reemplaza <tu-usuario> con tu cuenta o la URL del repositorio que estés usando
+   git clone https://github.com/<tu-usuario>/impostor-game.git
+   cd impostor-game
+   npm install
+   ```
+
+   Después de clonar, ya puedes ejecutar los comandos de la sección "Getting started" (`npm run dev`, `npm run build`, etc.).
+
+2. **Descargando un ZIP** (sin Git):
+
+   - Ve a la página del repositorio en GitHub.
+   - Haz clic en el botón **Code** > **Download ZIP**.
+   - Descomprime el archivo y, desde esa carpeta, instala las dependencias con `npm install` antes de lanzar el proyecto.
+
 ```bash
 # Install dependencies
 npm install

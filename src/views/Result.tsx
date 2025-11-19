@@ -1,9 +1,10 @@
 // src/views/Result.tsx
 import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useGameStore } from "@/store/game"; // se não usares alias "@", troca para: "../../store/game"
-import { resetTheme } from "@/services/wordManager"; // ou "../../services/wordManager"
+import { useGameStore } from "@/store/game";
+import { resetTheme } from "@/services/wordManager";
 
+// ecrã de resultado da ronda
 export default function Result() {
   const toPhase   = useGameStore((s) => s.toPhase);
   const players   = useGameStore((s) => s.room.players);
@@ -14,29 +15,39 @@ export default function Result() {
   const reset     = useGameStore((s) => s.reset);
   const setRoom   = useGameStore((s) => s.setRoom);
 
-  // Guarda: se não houver ronda válida, volta ao setup
+  // guarda: se não houver ronda válida, volta ao setup
   useEffect(() => {
     if (!round || !players || players.length < 3) {
       toPhase("setup");
     }
   }, [round, players, toPhase]);
 
+  // nome do impostor, com fallback seguro
   const impostorName = useMemo(
-    () => (round ? players[round.impostorIndex] : "—"),
+    () => {
+      if (!round || !players || !players.length) return "—";
+      return players[round.impostorIndex] ?? "—";
+    },
     [players, round]
   );
+
+  // se o grupo ganhou
   const groupWon = round?.winner === "group";
 
+  // recomeça o jogo com a mesma sala
   const onPlayAgain = () => {
-    startGame(); // mesma sala, novas palavras → vai para 'assign'
+    startGame();
   };
 
+  // cria uma nova sala e volta ao setup
   const onNewRoom = () => {
-    reset();                 // volta a 'setup'
-    setRoom({ players: [] }); // limpa jogadores (nova sala)
+    reset();
+    setRoom({ players: [] });
   };
 
+  // repõe o histórico de palavras do tema actual
   const onResetHistory = async () => {
+    if (!theme) return;
     const ok = confirm(`Repor histórico do tema "${theme}"?`);
     if (!ok) return;
     await resetTheme(theme);
@@ -57,7 +68,9 @@ export default function Result() {
           transition={{ type: "spring", stiffness: 300, damping: 26 }}
           className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-6 text-center shadow-xl"
         >
-          <p className="text-sm uppercase tracking-widest opacity-70">Vencedor</p>
+          <p className="text-sm uppercase tracking-widest opacity-70">
+            Vencedor
+          </p>
           <h2
             className={`mt-1 text-2xl font-bold ${
               groupWon ? "text-emerald-300" : "text-rose-300"
@@ -73,7 +86,9 @@ export default function Result() {
             </p>
             <p>
               <span className="opacity-70">Palavra real:</span>{" "}
-              <span className="font-semibold">{round?.realWord ?? "—"}</span>
+              <span className="font-semibold">
+                {round?.realWord ?? "—"}
+              </span>
             </p>
             <p>
               <span className="opacity-70">

@@ -5,55 +5,65 @@ type ThemePairs = { type: "pairs"; items: [string, string][] };
 type ThemeSingle = { type: "single"; items: string[] };
 export type ThemeFile = ThemePairs | ThemeSingle;
 
-// cache na memória para não refazer fetch
+// cache em memória para não refazer fetch
 const cache = new Map<string, ThemeFile>();
+
 const usedKey = (theme: string, bucket: "pairs" | "single") =>
   `wg:used:${theme}:${bucket}`;
 
+// carrega ficheiro de tema do /public/data
 async function loadTheme(theme: string): Promise<ThemeFile> {
   if (cache.has(theme)) return cache.get(theme)!;
 
-  // Respeita o BASE_URL (ex.: quando a app está servida num subpath)
   const url = `${import.meta.env.BASE_URL}data/${theme}.json`;
   const res = await fetch(url);
+
   if (!res.ok) {
     throw new Error(`Não encontrei ${url} (HTTP ${res.status})`);
   }
+
   const json = await res.json();
 
-  // aceita tanto {type, items} como um array simples
   const file: ThemeFile = Array.isArray(json)
     ? { type: "single", items: json }
     : json;
+
   cache.set(theme, file);
   return file;
 }
 
-async function getUsed(theme: string, bucket: "pairs" | "single") {
+async function getUsed(
+  theme: string,
+  bucket: "pairs" | "single"
+): Promise<number[]> {
   return (await get<number[]>(usedKey(theme, bucket))) ?? [];
 }
+
 async function setUsed(
   theme: string,
   bucket: "pairs" | "single",
   arr: number[]
-) {
+): Promise<void> {
   await set(usedKey(theme, bucket), Array.from(new Set(arr)));
 }
 
-export async function resetTheme(theme: string) {
+// limpa histórico de um tema
+export async function resetTheme(theme: string): Promise<void> {
   await del(usedKey(theme, "pairs"));
   await del(usedKey(theme, "single"));
 }
 
-export async function resetAllThemes() {
+// limpa histórico de todos os temas
+export async function resetAllThemes(): Promise<void> {
   const ks = await keys();
   await Promise.all(
     ks
-      .filter((k: any) => String(k).startsWith("wg:used:"))
-      .map((k) => del(k as any))
+      .filter((k) => String(k).startsWith("wg:used:"))
+      .map((k) => del(k))
   );
 }
 
+// devolve próxima combinação de palavras
 export async function getNextWords(
   theme: string,
   mode: "normal" | "cego"
@@ -65,12 +75,15 @@ export async function getNextWords(
     const free = [...Array(data.items.length).keys()].filter(
       (i) => !used.includes(i)
     );
+
     const exhausted = free.length === 0;
     const index = exhausted
       ? Math.floor(Math.random() * data.items.length)
       : free[Math.floor(Math.random() * free.length)];
 
-    if (!exhausted) await setUsed(theme, "pairs", [...used, index]);
+    if (!exhausted) {
+      await setUsed(theme, "pairs", [...used, index]);
+    }
 
     const [real, impostor] = data.items[index];
     return { real, impostor, exhausted };
@@ -97,15 +110,16 @@ export async function getNextWords(
       } while (impostorIdx === realIdx);
     }
   } else {
-    // escolhe real
     const pick = (arr: number[]) =>
       arr.splice(Math.floor(Math.random() * arr.length), 1)[0];
+
     const pool = [...free];
     realIdx = pick(pool);
 
     if (mode === "normal") {
       impostorIdx = pool.length > 0 ? pick(pool) : null;
     }
+
     await setUsed(theme, "single", [
       ...used,
       realIdx,
@@ -114,6 +128,10 @@ export async function getNextWords(
   }
 
   const real = data.items[realIdx];
-  const impostor = mode === "normal" ? data.items[impostorIdx!] : null;
+  const impostor =
+    mode === "normal" && impostorIdx !== null
+      ? data.items[impostorIdx]
+      : null;
+
   return { real, impostor, exhausted };
 }

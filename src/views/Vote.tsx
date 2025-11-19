@@ -5,23 +5,22 @@ import { useGameStore } from "@/store/game";
 
 /**
  * Vote.tsx — Votação (mobile-first)
- * - Cartões grandes e tocáveis (44px+)
- * - Destaque claro do selecionado (ring + chip)
+ * - Cartões grandes e tocáveis
+ * - Destaque claro do selecionado
  * - Modal de confirmação com animação
  * - Overlay de “suspense” antes do resultado
  */
-
 export default function Vote() {
   const toPhase     = useGameStore((s) => s.toPhase);
   const players     = useGameStore((s) => s.room.players);
   const round       = useGameStore((s) => s.round);
   const voteSuspect = useGameStore((s) => s.voteSuspect);
 
-  const [selected, setSelected]   = useState<number | null>(null);
+  const [selected, setSelected]       = useState<number | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [revealing, setRevealing] = useState(false);
+  const [revealing, setRevealing]     = useState(false);
 
-  // Guarda: se não houver ronda válida, volta ao setup
+  // guarda: se não houver ronda válida, volta ao setup
   useEffect(() => {
     if (!round || !players || players.length < 3) {
       toPhase("setup");
@@ -29,28 +28,39 @@ export default function Vote() {
   }, [round, players, toPhase]);
 
   const canConfirm = useMemo(() => selected !== null, [selected]);
-  const vibrate = (ms = 10) => { try { navigator.vibrate?.(ms); } catch {} };
 
+  // vibração simples para feedback
+  const vibrate = (ms = 10) => {
+    try {
+      navigator.vibrate?.(ms);
+    } catch {
+      // ignore
+    }
+  };
+
+  // confirma voto e avança para o resultado
   const onConfirm = () => {
     if (selected === null) return;
     setConfirmOpen(false);
     setRevealing(true);
     vibrate(15);
     window.setTimeout(() => {
-      voteSuspect(selected); // store muda para 'result'
+      voteSuspect(selected);
     }, 1100);
   };
 
   return (
     <div className="app-container">
-      {/* Cabeçalho */}
+      {/* cabeçalho */}
       <header className="screen pt-3 text-center px-4">
         <p className="text-xs opacity-70">Fase</p>
         <h1 className="text-2xl font-semibold tracking-tight">Votação</h1>
-        <p className="mt-1 text-xs opacity-60">Escolham 1 suspeito e confirmem.</p>
+        <p className="mt-1 text-xs opacity-60">
+          Escolham 1 suspeito e confirmem.
+        </p>
       </header>
 
-      {/* Lista de jogadores */}
+      {/* lista de jogadores para votar */}
       <main className="screen flex-1 px-4 py-3">
         <div
           role="radiogroup"
@@ -64,18 +74,26 @@ export default function Vote() {
                 key={i}
                 role="radio"
                 aria-checked={isSelected}
-                onClick={() => { setSelected(i); vibrate(5); }}
+                onClick={() => {
+                  setSelected(i);
+                  vibrate(5);
+                }}
                 className={`w-full text-left rounded-2xl border transition shadow-sm
                   px-4 py-4 active:scale-[0.99]
-                  ${isSelected
-                    ? "border-amber-400/50 ring-2 ring-amber-400/60 bg-white/5"
-                    : "border-white/10 bg-white/5 hover:bg-white/8"
+                  ${
+                    isSelected
+                      ? "border-amber-400/50 ring-2 ring-amber-400/60 bg-white/5"
+                      : "border-white/10 bg-white/5 hover:bg-white/8"
                   }`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`grid place-items-center w-9 h-9 rounded-full
-                        ${isSelected ? "bg-amber-500" : "bg-white/10"} text-white text-sm font-bold`}>
+                    <div
+                      className={`grid place-items-center w-9 h-9 rounded-full
+                        ${
+                          isSelected ? "bg-amber-500" : "bg-white/10"
+                        } text-white text-sm font-bold`}
+                    >
                       {name?.[0]?.toUpperCase() ?? "?"}
                     </div>
                     <span className="font-semibold truncate">{name}</span>
@@ -83,9 +101,10 @@ export default function Vote() {
 
                   <span
                     className={`text-[11px] px-2 py-1 rounded-full border
-                      ${isSelected
-                        ? "border-amber-400/60 bg-amber-400/10"
-                        : "border-white/10 bg-white/5 opacity-70"
+                      ${
+                        isSelected
+                          ? "border-amber-400/60 bg-amber-400/10"
+                          : "border-white/10 bg-white/5 opacity-70"
                       }`}
                   >
                     {isSelected ? "Selecionado" : "Suspeito"}
@@ -97,7 +116,7 @@ export default function Vote() {
         </div>
       </main>
 
-      {/* Barra inferior */}
+      {/* barra inferior com CTA */}
       <div className="bottom-bar">
         <div className="bottom-inner max-w-md mx-auto w-full">
           <button
@@ -110,7 +129,7 @@ export default function Vote() {
         </div>
       </div>
 
-      {/* Modal de confirmação */}
+      {/* modal de confirmação */}
       <AnimatePresence>
         {confirmOpen && (
           <motion.div
@@ -158,7 +177,7 @@ export default function Vote() {
         )}
       </AnimatePresence>
 
-      {/* Ecrã de suspense */}
+      {/* ecrã de suspense enquanto calcula resultado */}
       <AnimatePresence>
         {revealing && (
           <motion.div

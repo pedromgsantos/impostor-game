@@ -1,25 +1,25 @@
 // src/views/Assign.tsx
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
 
-/**
- * Assign.tsx — Atribuição de papéis/palavra (mobile-first)
- * - Cartão principal: praticamente opaco (bg-slate-900/98)
- * - Cartão secreto: muito opaco (impostor/grupo com /90)
- * - Máscara de revelação densa (from-black/90)
- * - “Tocar & Manter” VISÍVEL logo abaixo do cartão
- * - Instruções escondem quando o cartão secreto está visível (para não colidir)
- */
+// converte nome de carta Clash Royale em nome de ficheiro (ex.: "Hog Rider" -> "hog-rider")
+function slugifyCard(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 export default function Assign() {
   const phase   = useGameStore((s) => s.ui.phase);
   const players = useGameStore((s) => s.room.players);
-  const mode    = useGameStore((s) => s.room.mode); // 'normal' | 'cego'
+  const mode    = useGameStore((s) => s.room.mode);
+  const theme   = useGameStore((s) => s.room.theme);
   const toPhase = useGameStore((s) => s.toPhase);
   const round   = useGameStore((s) => s.round);
 
-  // Índice interno do jogador actual (NÃO apresentado no UI)
   const [idx, setIdx]                 = useState(0);
   const [hasRevealed, setHasRevealed] = useState(false);
   const [isHolding, setIsHolding]     = useState(false);
@@ -27,7 +27,9 @@ export default function Assign() {
   const holdTimerRef                  = useRef<number | null>(null);
   const surfaceRef                    = useRef<HTMLDivElement | null>(null);
 
-  // Guarda
+  const isClashTheme = theme === "royale";
+
+  // guarda: se algo estiver errado volta ao setup
   useEffect(() => {
     if (phase !== "assign") return;
     if (!players || players.length < 3) {
@@ -35,21 +37,18 @@ export default function Assign() {
     }
   }, [phase, players]);
 
-  const currentName = useMemo(
-    () => players?.[idx] ?? `Jogador ${idx + 1}`,
-    [players, idx]
-  );
+  const order = round?.revealOrder ?? [];
+  const actualIndex = order[idx] ?? idx;
 
-  const isImpostor = useMemo(
-    () => round?.impostorIndex === idx,
-    [round?.impostorIndex, idx]
-  );
+  const currentName = players?.[actualIndex] ?? `Jogador ${actualIndex + 1}`;
+
+  const isImpostor = round?.impostorIndex === actualIndex;
 
   const revealText = useMemo(() => {
     const normal = mode === "normal";
     if (isImpostor) {
       if (normal) return round?.impostorWord ?? "IMPOSTOR";
-      return "Boa sorte 😈"; // modo cego
+      return "Boa sorte 😈";
     }
     return round?.realWord ?? "PALAVRA";
   }, [isImpostor, mode, round?.impostorWord, round?.realWord]);
@@ -59,20 +58,34 @@ export default function Assign() {
     return "És do grupo";
   }, [isImpostor, mode]);
 
-  // Visibilidade do cartão secreto
+  // imagem da carta para tema Clash Royale
+  const cardImageSrc = useMemo(() => {
+    if (!isClashTheme || !revealText) return null;
+    const slug = slugifyCard(revealText);
+    return `${import.meta.env.BASE_URL}cards/${slug}.png`;
+  }, [isClashTheme, revealText]);
+
+  // visibilidade do cartão secreto
   const cardVisible = isHolding && (dragY <= -24 || holdTimerRef.current === -1);
 
-  const vibrate = (ms = 10) => { try { navigator.vibrate?.(ms); } catch {} };
+  const vibrate = (ms = 10) => {
+    try {
+      navigator.vibrate?.(ms);
+    } catch {
+      // ignore
+    }
+  };
 
-  // Long-press
+  // long-press
   const startHoldTimer = () => {
     clearHoldTimer();
     holdTimerRef.current = window.setTimeout(() => {
-      holdTimerRef.current = -1; // flag de hold
+      holdTimerRef.current = -1;
       setIsHolding(true);
       vibrate(8);
     }, 450);
   };
+
   const clearHoldTimer = () => {
     if (holdTimerRef.current && holdTimerRef.current > 0) {
       window.clearTimeout(holdTimerRef.current);
@@ -86,14 +99,16 @@ export default function Assign() {
     setDragY(0);
     startHoldTimer();
   };
+
   const onPointerMove = (e: React.PointerEvent) => {
     if (!isHolding) return;
     const rect = surfaceRef.current?.getBoundingClientRect();
     if (!rect) return;
     const centerY = rect.top + rect.height / 2;
-    const deltaY = e.clientY - centerY; // negativo quando arrasta para cima
+    const deltaY = e.clientY - centerY;
     setDragY(deltaY);
   };
+
   const onPointerUp = (e: React.PointerEvent) => {
     (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
     const revealedOnce = cardVisible || holdTimerRef.current === -1;
@@ -122,9 +137,10 @@ export default function Assign() {
 
   const onTapHoldButtonDown = () => {
     setIsHolding(true);
-    holdTimerRef.current = -1; // visível imediatamente
+    holdTimerRef.current = -1;
     vibrate(8);
   };
+
   const onTapHoldButtonUp = () => {
     setIsHolding(false);
     setHasRevealed(true);
@@ -135,7 +151,7 @@ export default function Assign() {
 
   return (
     <div className="app-container">
-      {/* Cabeçalho */}
+      {/* cabeçalho */}
       <header className="screen pt-2 text-center px-4">
         <p className="text-xs opacity-70">Fase</p>
         <h1 className="text-xl font-semibold tracking-tight">Atribuição Secreta</h1>
@@ -147,12 +163,10 @@ export default function Assign() {
         </div>
       </header>
 
-      {/* Conteúdo distribuído com respiros */}
+      {/* corpo principal */}
       <main className="screen flex-1 px-4 flex flex-col">
-        {/* respiro topo */}
         <div className="flex-1" />
 
-        {/* Cartão principal (bem opaco) */}
         <div className="mx-auto w-full max-w-[520px]">
           <div
             ref={surfaceRef}
@@ -165,14 +179,14 @@ export default function Assign() {
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           >
-            {/* Nome do jogador dentro do cartão */}
+            {/* nome do jogador dentro do cartão */}
             <div className="absolute top-6 inset-x-0 text-center pointer-events-none">
               <div className="font-extrabold tracking-tight text-[clamp(22px,7.2vw,40px)]">
                 {currentName}
               </div>
             </div>
 
-            {/* Instruções (escondem quando o cartão é mostrado) */}
+            {/* instruções, escondem quando o cartão é mostrado */}
             {!cardVisible && (
               <motion.div
                 className="absolute inset-0 grid place-items-center p-6"
@@ -188,7 +202,9 @@ export default function Assign() {
                   <p className="text-[13px] md:text-sm opacity-80">
                     Arrasta para cima e mantém
                   </p>
-                  <p className="text-xs opacity-60">ou usa “Tocar &amp; Manter” abaixo</p>
+                  <p className="text-xs opacity-60">
+                    ou usa “Tocar &amp; Manter” abaixo
+                  </p>
                   <div className="mt-2 flex items-center justify-center gap-2 opacity-50">
                     <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
                     <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse [animation-delay:150ms]" />
@@ -198,7 +214,7 @@ export default function Assign() {
               </motion.div>
             )}
 
-            {/* Cartão secreto (muito opaco e contrastado) */}
+            {/* cartão secreto */}
             <AnimatePresence>
               {cardVisible && (
                 <motion.div
@@ -211,9 +227,10 @@ export default function Assign() {
                 >
                   <div
                     className={`mx-5 w-full rounded-2xl border px-5 py-6 text-center shadow-xl
-                      ${isImpostor
-                        ? "bg-rose-600/90 border-rose-300/50"
-                        : "bg-emerald-600/90 border-emerald-300/50"
+                      ${
+                        isImpostor
+                          ? "bg-rose-600/90 border-rose-300/50"
+                          : "bg-emerald-600/90 border-emerald-300/50"
                       } text-white`}
                   >
                     <p className="text-[11px] uppercase tracking-widest/ wide">
@@ -224,20 +241,33 @@ export default function Assign() {
                     <p className="mt-4 text-[clamp(28px,8.2vw,40px)] font-bold break-words leading-tight">
                       {revealText}
                     </p>
+
+                    {isClashTheme && cardImageSrc && (
+                      <div className="mt-3 flex justify-center">
+                        <img
+                          src={cardImageSrc}
+                          alt={revealText}
+                          loading="lazy"
+                          className="h-24 md:h-28 object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"
+                        />
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Máscara de revelação bem densa */}
+            {/* máscara de revelação */}
             <motion.div
               aria-hidden
               className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent"
               style={{ transformOrigin: "bottom" }}
-              animate={{ scaleY: Math.max(0, Math.min(1, 1 - Math.max(0, -dragY) / 200)) }}
+              animate={{
+                scaleY: Math.max(0, Math.min(1, 1 - Math.max(0, -dragY) / 200)),
+              }}
             />
 
-            {/* Aviso anti-batota */}
+            {/* aviso anti-batota */}
             <div className="absolute bottom-0 inset-x-0 p-4 flex items-center justify-center">
               <p className="text-[11px] text-center opacity-70">
                 ⚠️ Jogo justo: sem espreitar, sem screenshots.
@@ -246,7 +276,7 @@ export default function Assign() {
           </div>
         </div>
 
-        {/* Botão alternativo: Tocar & Manter (logo abaixo do cartão) */}
+        {/* botão “Tocar & Manter” logo abaixo do cartão */}
         <div className="mt-4 mb-6 flex items-center justify-center">
           <button
             className="px-4 py-2 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/15 active:scale-[0.98] transition text-sm"
@@ -259,11 +289,10 @@ export default function Assign() {
           </button>
         </div>
 
-        {/* respiro antes da bottom bar */}
         <div className="flex-1" />
       </main>
 
-      {/* Bottom bar */}
+      {/* bottom bar */}
       <div className="bottom-bar">
         <div className="bottom-inner">
           <button

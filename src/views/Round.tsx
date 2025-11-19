@@ -3,22 +3,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
 
-/**
- * Round.tsx — Fase da ronda (temporizador + votar)
- * Layout mobile “espalhado”:
- *  - Topo: título + chip “Começa:”
- *  - Secção 1 (top): nome de quem começa
- *  - Secção 2 (meio): temporizador centrado verticalmente
- *  - Secção 3 (fundo): pausa/retoma + nota
- *  - Botão “Votar” fixo na bottom bar
- */
-
+// formata segundos em mm:ss
 function formatTime(total: number) {
   const m = Math.floor(total / 60).toString().padStart(2, "0");
   const s = Math.floor(total % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
 
+// ecrã da ronda (temporizador + botão para votar)
 export default function Round() {
   const toPhase        = useGameStore((s) => s.toPhase);
   const timerSetting   = useGameStore((s) => s.room.timerSec);
@@ -39,10 +31,26 @@ export default function Round() {
 
   const hasTimer = seconds >= 0 && timerSetting > 0;
 
-  const vibrate = (ms = 20) => { try { navigator.vibrate?.(ms); } catch {} };
+  // vibração simples para feedback
+  const vibrate = (ms = 20) => {
+    try {
+      navigator.vibrate?.(ms);
+    } catch {
+      // ignore
+    }
+  };
 
+  // guarda: se algo estiver errado com jogadores, volta ao setup
+  useEffect(() => {
+    if (!players || players.length < 3) {
+      toPhase("setup");
+    }
+  }, [players, toPhase]);
+
+  // efeito principal do temporizador
   useEffect(() => {
     if (!hasTimer || !running) return;
+
     intervalRef.current = window.setInterval(() => {
       setSeconds((prev) => {
         if (prev <= 0) return 0;
@@ -56,12 +64,14 @@ export default function Round() {
         return next;
       });
     }, 1000);
+
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
       intervalRef.current = null;
     };
   }, [running, hasTimer]);
 
+  // quando o valor de configuração muda, reinicia o temporizador
   useEffect(() => {
     setSeconds(Math.max(0, timerSetting));
     setRunning(timerSetting > 0);
@@ -73,7 +83,7 @@ export default function Round() {
 
   return (
     <div className="app-container">
-      {/* TOPO */}
+      {/* cabeçalho da ronda */}
       <header className="screen pt-2 text-center px-4">
         <p className="text-xs opacity-70">Fase</p>
         <h1 className="text-xl font-semibold tracking-tight">Ronda</h1>
@@ -84,9 +94,9 @@ export default function Round() {
         </div>
       </header>
 
-      {/* CONTEÚDO – distribuído em 3 blocos */}
+      {/* corpo com nome, temporizador e controlos */}
       <main className="screen flex-1 px-4 pb-28 flex flex-col">
-        {/* 1) Nome em grande (topo da coluna) */}
+        {/* nome em destaque no topo */}
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -98,10 +108,10 @@ export default function Round() {
           </div>
         </motion.div>
 
-        {/* Espaçador para empurrar o relógio para o meio */}
+        {/* espaçador para empurrar o relógio para o meio */}
         <div className="flex-1" />
 
-        {/* 2) Temporizador — CENTRADO verticalmente no “meio” */}
+        {/* temporizador centrado */}
         <div className="relative w-full select-none">
           <motion.div
             key={timeStr}
@@ -113,12 +123,13 @@ export default function Round() {
             onClick={() => hasTimer && setRunning((r) => !r)}
             className="cursor-default mx-auto w-fit text-center"
           >
-            {/* 72px em XS, cresce com 26vw e limita-se a 168px em ecrãs grandes */}
             <div className="leading-[0.9] font-black tabular-nums text-[clamp(72px,26vw,168px)]">
               {hasTimer ? timeStr : "--:--"}
             </div>
             {hasTimer && (
-              <p className="mt-3 text-xs opacity-60">Toque para pausar/retomar</p>
+              <p className="mt-3 text-xs opacity-60">
+                Toque para pausar/retomar
+              </p>
             )}
           </motion.div>
 
@@ -136,10 +147,10 @@ export default function Round() {
           </AnimatePresence>
         </div>
 
-        {/* Espaçador para afastar dos controlos */}
+        {/* espaçador entre relógio e controlos inferiores */}
         <div className="flex-1" />
 
-        {/* 3) Controlos + nota (fundo da coluna) */}
+        {/* controlos de pausa/retoma + nota */}
         <div className="mt-2 mb-4 flex flex-col items-center">
           {hasTimer && (
             <button
@@ -151,16 +162,19 @@ export default function Round() {
             </button>
           )}
           <p className="mt-4 text-[11px] opacity-60 text-center max-w-xs">
-            O temporizador não avança automaticamente a fase. Usa o botão abaixo
-            quando a discussão terminar.
+            O temporizador não avança automaticamente a fase. Usa o botão
+            abaixo quando a discussão terminar.
           </p>
         </div>
       </main>
 
-      {/* BOTÃO FIXO */}
+      {/* bottom bar com botão de votar */}
       <div className="bottom-bar">
         <div className="bottom-inner">
-          <button className="btn-primary w-full" onClick={() => toPhase("vote")}>
+          <button
+            className="btn-primary w-full"
+            onClick={() => toPhase("vote")}
+          >
             Votar
           </button>
         </div>

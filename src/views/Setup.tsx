@@ -1,40 +1,44 @@
-// src/views/Setup.tsx
 import { useMemo } from "react";
 import { useGameStore } from "@/store/game";
 
 const TIMER_STEPS = [0, 30, 60, 90, 120, 150, 180, 210, 240] as const;
 
+// formata o tempo do temporizador
 function labelTime(s: number) {
   if (s === 0) return "Sem temporizador";
-  const m = Math.floor(s / 60)
-    .toString()
-    .padStart(1, "0");
+  const m = Math.floor(s / 60).toString();
   const sec = (s % 60).toString().padStart(2, "0");
   return `${m}:${sec}`;
 }
 
+// ecrã de configuração
 export default function Setup() {
   const room = useGameStore((s) => s.room);
   const setRoom = useGameStore((s) => s.setRoom);
   const startGame = useGameStore((s) => s.startGame);
 
+  const isRoyale = room.theme === "royale";
+
+  // verifica nº de jogadores válidos
   const canPlay = useMemo(
     () => room.players.filter((p) => p.trim()).length >= 3,
     [room.players]
   );
 
+  // adiciona um jogador com nome genérico
   const onAddPlayer = () => {
     const next = `Jogador ${room.players.length + 1}`;
     setRoom({ players: [...room.players, next] });
   };
 
+  // remove jogador pelo índice
   const onRemove = (i: number) => {
     setRoom({ players: room.players.filter((_, j) => j !== i) });
   };
 
   return (
     <div className="app-container">
-      {/* Cabeçalho */}
+      {/* cabeçalho */}
       <header className="screen pt-4">
         <h1 className="app-title">Impostor Game</h1>
         <p className="mt-1 text-sm opacity-60">
@@ -42,9 +46,9 @@ export default function Setup() {
         </p>
       </header>
 
-      {/* Conteúdo */}
+      {/* conteúdo */}
       <main className="screen flex-1 pb-28 pt-4 space-y-4">
-        {/* Jogadores */}
+        {/* bloco jogadores */}
         <section className="card p-4">
           <div className="section-title">Jogadores</div>
 
@@ -62,6 +66,7 @@ export default function Setup() {
                     setRoom({ players: arr });
                   }}
                 />
+
                 <button
                   className="icon-btn"
                   aria-label={`Remover ${p || `Jogador ${i + 1}`}`}
@@ -78,10 +83,12 @@ export default function Setup() {
           </div>
         </section>
 
-        {/* Modo e Tema */}
+        {/* modo e tema */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* modo de jogo */}
           <div className="card p-4">
             <div className="section-title">Modo</div>
+
             <div className="grid grid-cols-2 gap-2">
               <button
                 className={`btn w-full ${
@@ -90,10 +97,17 @@ export default function Setup() {
                     : "btn-secondary"
                 }`}
                 aria-pressed={room.mode === "normal"}
-                onClick={() => setRoom({ mode: "normal" })}
+                disabled={isRoyale}
+                aria-disabled={isRoyale}
+                onClick={() => {
+                  // tema royale não suporta modo normal
+                  if (isRoyale) return;
+                  setRoom({ mode: "normal" });
+                }}
               >
                 Normal
               </button>
+
               <button
                 className={`btn w-full ${
                   room.mode === "cego"
@@ -106,23 +120,40 @@ export default function Setup() {
                 Cego
               </button>
             </div>
+
             <p className="mt-2 text-[11px] opacity-60">
-              No modo <span className="font-medium">Cego</span>, o impostor não
-              vê nenhuma palavra e <span className="font-medium">nunca</span>{" "}
-              começa a falar.
+              No modo Cego, o impostor não vê nenhuma palavra e nunca começa a
+              falar.
             </p>
+
+            {isRoyale && (
+              <p className="mt-1 text-[11px] text-amber-300/90">
+                O tema Royale só funciona em modo Cego.
+              </p>
+            )}
           </div>
 
+          {/* seleção de tema */}
           <div className="card p-4">
             <div className="section-title">Tema</div>
+
             <select
               className="select"
               value={room.theme}
-              onChange={(e) => setRoom({ theme: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                if (value === "royale") {
+                  // ao escolher Royale, forçamos logo modo Cego
+                  setRoom({ theme: "royale", mode: "cego" });
+                } else {
+                  setRoom({ theme: value });
+                }
+              }}
             >
               <option value="classic">Classic</option>
               <option value="celebrities">Celebrities</option>
-              <option value="spicy">Spicy (+18)</option>
+              <option value="royale">Royale Heheheha</option>
               <option value="food">Food</option>
             </select>
 
@@ -132,9 +163,10 @@ export default function Setup() {
           </div>
         </section>
 
-        {/* Temporizador */}
+        {/* temporizador */}
         <section className="card p-4">
           <div className="section-title">Tempo por ronda</div>
+
           <div className="flex items-center gap-2">
             <select
               className="select"
@@ -148,13 +180,14 @@ export default function Setup() {
               ))}
             </select>
           </div>
+
           <p className="mt-2 text-[11px] opacity-60">
             0 desactiva o temporizador.
           </p>
         </section>
       </main>
 
-      {/* CTA fixo */}
+      {/* botão jogar */}
       <div className="bottom-bar">
         <div className="bottom-inner">
           <button
@@ -165,6 +198,7 @@ export default function Setup() {
           >
             Jogar
           </button>
+
           {!canPlay && (
             <p className="mt-2 text-center text-[11px] opacity-60">
               São necessários pelo menos 3 jogadores.

@@ -29,7 +29,7 @@ If you do not yet have the code locally, choose one of the following:
 ### 1. Clone with Git
 
 ```bash
-git clone https://github.com/<your-username>/impostor-game.git
+git clone https://github.com/pedromgsantos/impostor-game.git
 cd impostor-game
 npm install
 ```

@@ -58,12 +58,12 @@ export default function Assign() {
     return "És do grupo";
   }, [isImpostor, mode]);
 
-  // imagem da carta para tema Clash Royale
+  // imagem da carta — só para jogadores do grupo no tema Royale (impostor joga no escuro)
   const cardImageSrc = useMemo(() => {
-    if (!isClashTheme || !revealText) return null;
+    if (!isClashTheme || isImpostor || !revealText) return null;
     const slug = slugifyCard(revealText);
     return `${import.meta.env.BASE_URL}cards/${slug}.png`;
-  }, [isClashTheme, revealText]);
+  }, [isClashTheme, isImpostor, revealText]);
 
   // visibilidade do cartão secreto
   const cardVisible = isHolding && (dragY <= -24 || holdTimerRef.current === -1);
@@ -238,19 +238,31 @@ export default function Assign() {
                     </p>
                     <p className="mt-1 text-xs/relaxed opacity-90">O teu papel</p>
                     <p className="mt-1 text-[13px] opacity-95">{subtitle}</p>
-                    <p className="mt-4 text-[clamp(28px,8.2vw,40px)] font-bold break-words leading-tight">
-                      {revealText}
-                    </p>
-
-                    {isClashTheme && cardImageSrc && (
-                      <div className="mt-3 flex justify-center">
-                        <img
-                          src={cardImageSrc}
-                          alt={revealText}
-                          loading="lazy"
-                          className="h-24 md:h-28 object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"
-                        />
+                    {/* impostor no Royale: visual de mistério sem imagem */}
+                    {isClashTheme && isImpostor ? (
+                      <div className="mt-4 flex flex-col items-center gap-2">
+                        <div className="w-20 h-28 rounded-xl bg-black/40 border-2 border-rose-300/30 flex flex-col items-center justify-center gap-1">
+                          <span className="text-3xl">😈</span>
+                          <span className="text-[10px] text-rose-200/70 uppercase tracking-widest">Impostor</span>
+                        </div>
+                        <p className="text-[clamp(20px,6vw,30px)] font-bold">Boa sorte</p>
                       </div>
+                    ) : (
+                      <>
+                        <p className="mt-4 text-[clamp(28px,8.2vw,40px)] font-bold break-words leading-tight">
+                          {revealText}
+                        </p>
+                        {isClashTheme && cardImageSrc && (
+                          <div className="mt-3 flex justify-center">
+                            <img
+                              src={cardImageSrc}
+                              alt={revealText}
+                              loading="lazy"
+                              className="h-24 md:h-28 object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </motion.div>

@@ -12,7 +12,6 @@ export default function Result() {
   const round     = useGameStore((s) => s.round);
   const startGame = useGameStore((s) => s.startGame);
   const reset     = useGameStore((s) => s.reset);
-  const setRoom   = useGameStore((s) => s.setRoom);
 
   useEffect(() => {
     if (!round || !players || players.length < 3) toPhase("setup");
@@ -27,7 +26,6 @@ export default function Result() {
 
   const onNewRoom = () => {
     reset();
-    setRoom({ players: [] });
   };
 
   const onResetHistory = async () => {

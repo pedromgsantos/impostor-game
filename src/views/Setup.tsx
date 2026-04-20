@@ -63,7 +63,17 @@ export default function Setup() {
           initial="hidden"
           animate="visible"
         >
-          <div className="section-title">Jogadores</div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="section-title mb-0">Jogadores</div>
+            {room.players.length > 0 && (
+              <button
+                className="text-[11px] text-white/35 hover:text-rose-400 transition-colors"
+                onClick={() => setRoom({ players: [] })}
+              >
+                Eliminar todos
+              </button>
+            )}
+          </div>
 
           <div className="space-y-2">
             <AnimatePresence initial={false}>

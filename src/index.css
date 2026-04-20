@@ -9,13 +9,14 @@
 @layer base {
   :root { color-scheme: dark; }
   html, body, #root { height: 100%; }
+  * { -webkit-tap-highlight-color: transparent; }
   body {
     @apply text-white antialiased;
-    /* fundo escuro com glow avermelhado discreto */
     background:
-      radial-gradient(900px 480px at 50% -10%, rgba(239,68,68,.18), transparent 60%),
-      radial-gradient(700px 420px at 10% 100%, rgba(248,113,113,.10), transparent 60%),
-      linear-gradient(180deg, #0a0a0b 0%, #0b0a0f 45%, #10070a 100%);
+      radial-gradient(800px 500px at 50% -5%,  rgba(239,68,68,.15), transparent 65%),
+      radial-gradient(600px 400px at 5%  95%,  rgba(248,113,113,.09), transparent 65%),
+      radial-gradient(500px 300px at 95% 80%,  rgba(185,28,28,.07),  transparent 60%),
+      linear-gradient(180deg, #09090b 0%, #0b0a0f 50%, #10070a 100%);
   }
 }
 
@@ -28,7 +29,6 @@
 
 /* ============ TOKENS DE UI ============ */
 @layer components {
-  /* container base para cada ecrã */
   .app-container {
     @apply min-h-screen flex flex-col;
     padding-top: env(safe-area-inset-top);
@@ -37,54 +37,85 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* wrapper responsivo centrado para conteúdo principal (mobile-first) */
   .screen {
     @apply w-full px-4;
-    max-width: 420px;        /* ótimo para telemóvel */
+    max-width: 440px;
     margin-left: auto;
     margin-right: auto;
   }
 
   .app-title {
     @apply text-3xl sm:text-4xl font-extrabold tracking-tight;
-    background: linear-gradient(90deg, #fff 0%, #fecaca 100%);
+    background: linear-gradient(90deg, #fff 0%, #fca5a5 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
 
   .card {
-    @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur shadow-[0_8px_30px_rgba(0,0,0,.35)];
+    @apply rounded-2xl border border-white/[0.07] bg-white/[0.04] backdrop-blur-sm;
+    box-shadow: 0 4px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);
   }
 
   /* Botões base */
   .btn, .btn-primary, .btn-secondary, .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-2xl px-4 py-3 font-semibold transition active:scale-[0.99];
+    @apply inline-flex items-center justify-center rounded-2xl px-4 py-3 font-semibold;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease, opacity 0.15s ease;
   }
-  .btn-primary { @apply bg-brand hover:bg-brand-600 text-white shadow-[0_8px_30px_rgba(0,0,0,.35)] disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-secondary { @apply border border-white/15 bg-white/5 hover:bg-white/10 text-white; }
+  .btn:active:not(:disabled), .btn-primary:active:not(:disabled),
+  .btn-secondary:active:not(:disabled), .btn-ghost:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .btn-primary {
+    @apply bg-brand text-white disabled:opacity-40 disabled:cursor-not-allowed;
+    box-shadow: 0 4px 20px rgba(239,68,68,.30), 0 2px 8px rgba(0,0,0,.30);
+  }
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-brand-600;
+    box-shadow: 0 6px 28px rgba(239,68,68,.45), 0 2px 10px rgba(0,0,0,.35);
+  }
+
+  .btn-secondary {
+    @apply border border-white/15 bg-white/5 hover:bg-white/10 text-white;
+  }
   .btn-ghost { @apply text-white/80 hover:text-white hover:bg-white/5; }
 
   .input, .select {
-    @apply w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-brand/40;
+    @apply w-full rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2.5 text-white placeholder-white/30 outline-none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input:focus, .select:focus {
+    @apply border-brand/40;
+    box-shadow: 0 0 0 3px rgba(239,68,68,.15);
   }
 
-  .icon-btn { @apply rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-3 py-2; }
+  .icon-btn {
+    @apply rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2;
+    transition: background-color 0.15s ease;
+  }
 
-  .section-title { @apply text-xs tracking-wider uppercase opacity-80 mb-2; }
+  .section-title {
+    @apply text-[10px] font-semibold tracking-[0.12em] uppercase text-white/45 mb-3;
+  }
 
-  /* Barra fixa inferior centrada */
+  /* Barra fixa inferior */
   .bottom-bar {
     @apply fixed inset-x-0 bottom-0 z-40 flex justify-center;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(8,8,9,0.85) 40%, rgba(8,8,9,0.95) 100%);
-    backdrop-filter: blur(8px);
-    padding-top: 8px;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(9,9,11,0.88) 45%, rgba(9,9,11,0.97) 100%);
+    backdrop-filter: blur(12px);
+    padding-top: 12px;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
   }
   .bottom-inner {
     @apply w-full;
-    max-width: 420px;
+    max-width: 440px;
     padding-left: 16px;
     padding-right: 16px;
+  }
+
+  /* Badge de fase (header pill) */
+  .phase-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs;
   }
 }

@@ -3,14 +3,7 @@ import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
-
-// converte nome de carta Clash Royale em nome de ficheiro (ex.: "Hog Rider" -> "hog-rider")
-function slugifyCard(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
+import { slugifyCard } from "@/utils/slugifyCard";
 
 export default function Assign() {
   const phase   = useGameStore((s) => s.ui.phase);

@@ -54,7 +54,7 @@ export default function Setup() {
         </p>
       </motion.header>
 
-      <main className="screen flex-1 pb-28 pt-4 space-y-4">
+      <main className="screen flex-1 pb-28 pt-4 space-y-4 overflow-y-auto">
         {/* jogadores */}
         <motion.section
           className="card p-4"

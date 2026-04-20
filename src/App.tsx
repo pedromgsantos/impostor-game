@@ -34,7 +34,7 @@ export default function App() {
         animate="animate"
         exit="exit"
         transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-        style={{ minHeight: "100%" }}
+        style={{ height: "100%" }}
       >
         {phase === "setup"  && <Setup />}
         {phase === "assign" && <Assign />}

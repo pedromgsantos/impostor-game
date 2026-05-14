@@ -1,65 +1,78 @@
 # Impostor Game
 
-Impostor Game is a mobile‑friendly social deduction experience inspired by one‑secret‑word party games. Players pass a single phone around, and the app guides the group through setup, secret role assignment, the discussion round, voting, and the final reveal.
+A mobile-first social deduction party game. One player secretly receives a different word from everyone else and must blend in without being caught.
 
-## Features
+> The UI is in **Portuguese (PT)**.
 
-* **Guided lobby setup**: add or remove players, choose between Normal or Blind (Cego) mode, select a word theme, and set a round timer. Invalid configurations automatically return to the setup screen.
-* **Secret role assignment**: each player presses and holds to reveal their card, with haptic feedback. In Royale mode, the correct Clash Royale card art is shown automatically.
-* **Word management**: word lists are loaded from `public/data/*.json` and stored in IndexedDB using `idb-keyval`. Words are not repeated until a theme is exhausted. Hosts can reset a theme or clear the entire history.
-* **Discussion timer**: the Round screen displays a large animated timer with pause/resume controls. When the timer reaches zero, it emits a subtle "ding" but never blocks progression.
-* **Touch‑first voting**: large tap targets, confirmation modals, and suspense animations before results. Votes are stored in Zustand state and navigation errors are handled gracefully.
-* **Persistent rooms**: lobby settings (players, timer, mode) persist in `localStorage`.
-* **PWA support**: Vite + `vite-plugin-pwa` provide a manifest and icons for installation on mobile devices.
+## How to Play
+
+1. **Setup**: Add players (minimum 3), pick a game mode, theme, and optional timer.
+2. **Assign**: Each player privately sees their word by holding the reveal button or dragging the card up. Nobody else should look.
+3. **Round**: Players take turns giving clues. The timer (if set) counts down. The first player to speak is shown at the start.
+4. **Vote**: The group votes on who they think is the impostor.
+5. **Result**: The game reveals whether the group caught the impostor or not, plus the real word and the impostor word (Normal mode only).
+
+## Game Modes
+
+| Mode | Description |
+|------|-------------|
+| **Normal** | The impostor receives a related but different word from the group. |
+| **Cego (Blind)** | The impostor sees no word at all and must bluff from scratch. The impostor never speaks first. |
+
+## Themes
+
+| Theme | Type | Notes |
+|-------|------|-------|
+| **Classic** | Word pairs | Impostor gets a related alternate word |
+| **Celebrities** | Single list | Impostor gets a random different word |
+| **Food** | Single list | Impostor gets a random different word |
+| **Royale Heheheha** | Single list | Forces Blind mode; shows card images for group players |
+
+The game tracks which words have been used per theme (stored in IndexedDB) and avoids repeating them until the pool is exhausted. Players can reset a theme's history from the Result screen.
 
 ## Tech Stack
 
-* React 19 + TypeScript
-* Vite 7
-* Tailwind CSS v4
-* Zustand with persistence
-* Framer Motion for transitions
-* idb-keyval for IndexedDB
-* Vite PWA Plugin
+| Tool | Version |
+|------|---------|
+| React | 19 |
+| TypeScript | 5.9 |
+| Vite | 7 |
+| Tailwind CSS | 4 |
+| Framer Motion | 12 |
+| Zustand | 5 |
+| idb-keyval | 6 |
+| vite-plugin-pwa | 1 |
 
-## Getting the Project
+## Features
 
-If you do not yet have the code locally, choose one of the following:
-
-### 1. Clone with Git
-
-```bash
-git clone https://github.com/pedromgsantos/impostor-game.git
-cd impostor-game
-npm install
-```
-
-### 2. Download ZIP
-
-1. Open the repository on GitHub.
-2. Click **Code → Download ZIP**.
-3. Extract the archive and run:
-
-```bash
-npm install
-```
+- **PWA**: installable on mobile and desktop, works offline after the first load.
+- **No backend**: fully client-side. No accounts, no server, no data leaves the device.
+- **Word history**: IndexedDB prevents word repetition across rounds until the theme pool is exhausted.
+- **State persistence**: room configuration (players, mode, theme, timer) survives a page refresh via Zustand + localStorage.
+- **Haptic feedback**: vibration on key interactions for mobile devices.
+- **Anti-cheat reveal**: the secret word is only visible while the player holds the card; the screen clears the moment they release.
+- **Animated transitions**: smooth phase-to-phase transitions powered by Framer Motion.
 
 ## Getting Started
 
 ```bash
+# Clone
+git clone https://github.com/pedromgsantos/impostor-game.git
+cd impostor-game
+
 # Install dependencies
 npm install
 
 # Start development server (http://localhost:5173)
 npm run dev
 
-# Build for production
+# Production build
 npm run build
 
-# Preview production build
+# Preview production build locally
 npm run preview
 
-# Run ESLint
+# Lint
 npm run lint
 ```
 
@@ -67,41 +80,37 @@ npm run lint
 
 ```
 src/
-├─ App.tsx
-├─ components/
-├─ services/wordManager.ts
-├─ store/game.ts
-├─ utils/
-└─ views/
+├── App.tsx                  # Phase router with animated transitions
+├── store/
+│   └── game.ts              # Zustand store, all game state and actions
+├── views/
+│   ├── Setup.tsx            # Player list, mode, theme, timer configuration
+│   ├── Assign.tsx           # Secret role reveal (drag/hold mechanic)
+│   ├── Round.tsx            # Discussion timer and first-speaker indicator
+│   ├── Vote.tsx             # Suspect selection and confirmation modal
+│   └── Result.tsx           # Winner reveal and round summary
+├── services/
+│   └── wordManager.ts       # Theme loading and word-history tracking (IndexedDB)
+└── utils/
+    └── slugifyCard.ts       # Maps a word to its card image filename (Royale theme)
+
 public/
-├─ data/*.json
-├─ cards/*.png
-└─ manifest.webmanifest
+└── data/
+    ├── classic.json         # Word pairs: [[real, impostor], ...]
+    ├── celebrities.json     # Single word list: ["word", ...]
+    ├── food.json            # Single word list
+    └── royale.json          # Single word list (Blind mode, with card images)
 ```
 
-## Word Themes
+## Adding a New Theme
 
-Word lists live under `public/data` and can be:
-
-* **Pairs**: `{ "type": "pairs", "items": [["beach", "pool"], ...] }` for Normal mode, where the impostor sees an alternate word.
-* **Single**: `{ "type": "single", "items": ["pizza", "sushi", ...] }` for Blind mode or when the impostor receives a random second word.
-
-The `wordManager.ts` tracks used indices in IndexedDB and warns when a theme is exhausted.
-
-## Gameplay Flow
-
-1. **Setup** – configure players, mode, theme, and timer.
-2. **Assign** – pass the device around and reveal roles.
-3. **Round** – discussion phase with animated timer.
-4. **Vote** – choose suspects, confirm, and display suspense animation.
-5. **Result** – reveal impostor, real word, impostor word (if applicable), and winner.
-
-## Customisation
-
-* Add or translate word sets by placing JSON files in `public/data` and updating the theme selector in `src/views/Setup.tsx`.
-* Add art assets (e.g., new Clash Royale cards) by placing PNGs in `public/cards` using the slug format generated in `Assign.tsx`.
-* Adjust styling in `src/index.css` and `tailwind.config.ts`.
+1. Create `public/data/<theme>.json`:
+   - **Word pairs** (Normal mode): `{ "type": "pairs", "items": [["beach", "pool"], ...] }`
+   - **Single list** (Blind/Normal): `["pizza", "sushi", ...]`
+2. Add an `<option>` to the theme `<select>` in `src/views/Setup.tsx`.
+3. If the theme must force Blind mode, handle it in `src/store/game.ts` where `effectiveMode` is derived (currently only `"royale"` forces Blind).
+4. To show card images, place PNGs in `public/cards/` using the filename format produced by `slugifyCard.ts`.
 
 ## License
 
-This project is distributed under the MIT License.
+MIT

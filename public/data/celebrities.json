@@ -1,7 +1,6 @@
 {
   "type": "pairs",
   "items": [
-    ["Cristiano Ronaldo", "Lionel Messi"],
     ["Beyoncé", "Rihanna"],
     ["Adele", "Taylor Swift"],
     ["Ed Sheeran", "Bruno Mars"],
@@ -20,6 +19,23 @@
     ["Pedro Pascal", "Oscar Isaac"],
     ["Meryl Streep", "Cate Blanchett"],
     ["Hugh Jackman", "Ben Affleck"],
-    ["Morgan Freeman", "Samuel L. Jackson"]
+    ["Morgan Freeman", "Samuel L. Jackson"],
+
+    ["Erling Haaland", "Kylian Mbappé"],
+    ["Bruno Fernandes", "João Félix"],
+    ["Harry Styles", "Niall Horan"],
+    ["Timothée Chalamet", "Paul Mescal"],
+    ["Dua Lipa", "Charli XCX"],
+    ["The Weeknd", "Drake"],
+    ["Cillian Murphy", "Tom Hardy"],
+    ["Anya Taylor-Joy", "Florence Pugh"],
+    ["Bad Bunny", "J Balvin"],
+    ["Sabrina Carpenter", "Gracie Abrams"],
+    ["Chris Hemsworth", "Chris Pratt"],
+    ["Gordon Ramsay", "Jamie Oliver"],
+    ["Ana Moura", "Mariza"],
+    ["Quentin Tarantino", "Martin Scorsese"],
+    ["Kendall Jenner", "Gigi Hadid"],
+    ["Ivete Sangalo", "Claudia Leitte"]
   ]
 }

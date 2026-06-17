@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { playerEmoji } from "@/utils/playerEmoji";
 
 const TIMER_STEPS = [0, 30, 60, 90, 120, 150, 180, 210, 240] as const;
 
@@ -88,8 +89,8 @@ export default function Setup() {
                   className="flex items-center gap-2 overflow-hidden"
                 >
                   {/* avatar inicial */}
-                  <div className="grid place-items-center w-9 h-9 shrink-0 rounded-full bg-white/8 border border-white/10 text-sm font-bold text-white/70">
-                    {p?.[0]?.toUpperCase() ?? (i + 1)}
+                  <div className="grid place-items-center w-9 h-9 shrink-0 rounded-full bg-white/8 border border-white/10 text-lg">
+                    {playerEmoji(i)}
                   </div>
                   <input
                     className="input flex-1"

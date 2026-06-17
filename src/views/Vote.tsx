@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { playerEmoji } from "@/utils/playerEmoji";
 
 export default function Vote() {
   const toPhase     = useGameStore((s) => s.toPhase);
@@ -63,9 +64,9 @@ export default function Vote() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`grid place-items-center w-9 h-9 rounded-full shrink-0 text-sm font-bold transition-colors duration-150
-                        ${isSelected ? "bg-amber-500 text-white" : "bg-white/10 text-white/70"}`}>
-                      {name?.[0]?.toUpperCase() ?? "?"}
+                    <div className={`grid place-items-center w-9 h-9 rounded-full shrink-0 text-lg transition-colors duration-150
+                        ${isSelected ? "bg-amber-500/20" : "bg-white/10"}`}>
+                      {playerEmoji(i)}
                     </div>
                     <span className="font-semibold truncate">{name}</span>
                   </div>

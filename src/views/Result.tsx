@@ -1,8 +1,10 @@
 // src/views/Result.tsx
 import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 import { useGameStore } from "@/store/game";
 import { resetTheme } from "@/services/wordManager";
+import { playerEmoji } from "@/utils/playerEmoji";
 
 export default function Result() {
   const toPhase   = useGameStore((s) => s.toPhase);
@@ -22,11 +24,31 @@ export default function Result() {
     return players[round.impostorIndex] ?? "—";
   }, [players, round]);
 
+  const impostorIdx = round?.impostorIndex ?? 0;
   const groupWon = round?.winner === "group";
 
-  const onNewRoom = () => {
-    reset();
-  };
+  useEffect(() => {
+    if (!groupWon) return;
+
+    const fire = (opts: confetti.Options) =>
+      confetti({ colors: ["#ef4444", "#fca5a5", "#ffffff", "#f87171", "#fee2e2"], ...opts });
+
+    const t1 = setTimeout(() => {
+      fire({ particleCount: 50, angle: 60,  spread: 55, origin: { x: 0,   y: 0.8 } });
+      fire({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1,   y: 0.8 } });
+    }, 250);
+
+    const t2 = setTimeout(() => {
+      fire({ particleCount: 80, spread: 70, origin: { x: 0.5, y: 0.75 } });
+    }, 500);
+
+    const t3 = setTimeout(() => {
+      fire({ particleCount: 40, spread: 100, startVelocity: 20, decay: 0.92, origin: { x: 0.25, y: 0.65 } });
+      fire({ particleCount: 40, spread: 100, startVelocity: 20, decay: 0.92, origin: { x: 0.75, y: 0.65 } });
+    }, 750);
+
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [groupWon]);
 
   const onResetHistory = async () => {
     if (!theme) return;
@@ -36,92 +58,88 @@ export default function Result() {
     alert(`Histórico do tema "${theme}" reposto.`);
   };
 
-  const infoItems = [
-    { label: "Impostor",        value: impostorName },
-    { label: "Palavra real",    value: round?.realWord ?? "—" },
-    {
-      label: mode === "normal" ? "Palavra do impostor" : "Modo cego",
-      value: mode === "normal" ? (round?.impostorWord ?? "—") : "Impostor jogou no escuro",
-    },
-  ];
-
   return (
     <div className="app-container">
-      <header className="screen pt-4 text-center px-4">
-        <p className="text-xs text-white/50">Fase</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Resultado</h1>
-      </header>
+      <main className="screen flex-1 px-4 flex flex-col items-center pt-8 pb-4">
 
-      <main className="screen flex-1 px-4 py-6 flex flex-col items-center">
-        {/* cartão do vencedor */}
+        {/* Outcome — big and dramatic */}
         <motion.div
-          initial={{ y: 20, opacity: 0, scale: 0.97 }}
-          animate={{ y: 0,  opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 280, damping: 24 }}
-          className="w-full max-w-md"
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.4 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 16, delay: 0.05 }}
         >
-          <div className={`rounded-3xl border p-6 text-center shadow-2xl ${
-            groupWon
-              ? "border-emerald-500/25 bg-emerald-500/[0.08]"
-              : "border-rose-500/25 bg-rose-500/[0.08]"
-          }`}>
-            <p className="text-xs uppercase tracking-widest text-white/50 mb-1">Vencedor</p>
-            <h2 className={`text-3xl font-bold tracking-tight ${
-              groupWon ? "text-emerald-300" : "text-rose-300"
-            }`}>
-              {groupWon ? "Grupo venceu 🎉" : "Impostor venceu 😈"}
-            </h2>
-          </div>
+          <div className="text-8xl mb-4">{groupWon ? "🎉" : "😈"}</div>
+          <h1 className={`text-4xl font-bold tracking-tight ${groupWon ? "text-emerald-400" : "text-rose-400"}`}>
+            {groupWon ? "Grupo venceu!" : "Impostor venceu!"}
+          </h1>
+          <motion.p
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-2 text-sm text-white/40 max-w-xs mx-auto"
+          >
+            {groupWon
+              ? "Encontraram o impostor! Bom trabalho de equipa. 🔍"
+              : "O impostor enganou toda a gente. Boa sorte da próxima!"}
+          </motion.p>
         </motion.div>
 
-        {/* informação da ronda */}
-        <div className="w-full max-w-md mt-4 card p-5 space-y-3">
-          {infoItems.map(({ label, value }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18 + i * 0.08, duration: 0.28 }}
-              className="flex items-start justify-between gap-3"
-            >
-              <span className="text-sm text-white/50 shrink-0">{label}</span>
-              <span className="text-sm font-semibold text-right">{value}</span>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.55 }}
-          className="mt-4 text-[11px] text-white/40 text-center max-w-sm"
+        {/* Impostor reveal card */}
+        <motion.div
+          className="w-full max-w-md mt-8 card overflow-hidden"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.35, ease: "easeOut" }}
         >
-          Podes jogar novamente com a mesma sala ou criar uma nova.
-        </motion.p>
+          {/* Impostor header */}
+          <div className={`px-5 py-5 text-center border-b border-white/[0.07] ${groupWon ? "bg-emerald-500/[0.07]" : "bg-rose-500/[0.07]"}`}>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-white/35 mb-2">O impostor era</p>
+            <div className="text-4xl mb-1.5">{playerEmoji(impostorIdx)}</div>
+            <p className="text-2xl font-bold">{impostorName}</p>
+          </div>
+
+          {/* Details */}
+          <div className="px-5 py-4 space-y-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-sm text-white/40 shrink-0">Palavra real</span>
+              <span className="text-sm font-semibold text-right">{round?.realWord ?? "—"}</span>
+            </div>
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-sm text-white/40 shrink-0">
+                {mode === "normal" ? "Pista do impostor" : "Modo cego"}
+              </span>
+              <span className="text-sm font-semibold text-right">
+                {mode === "normal" ? (round?.impostorWord ?? "—") : "Impostor jogou no escuro"}
+              </span>
+            </div>
+          </div>
+        </motion.div>
       </main>
 
       <motion.footer
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-        className="screen px-4 pb-6 pt-3 flex flex-col gap-2"
+        transition={{ delay: 0.6, duration: 0.3 }}
+        className="screen px-4 pb-6 pt-3 flex flex-col gap-2.5"
       >
         <button
-          className="w-full py-3.5 rounded-2xl font-semibold bg-emerald-500 hover:bg-emerald-400 active:scale-[0.97] transition shadow-lg"
-          style={{ boxShadow: "0 4px 20px rgba(16,185,129,.30)" }}
+          className={`w-full py-4 rounded-2xl font-bold text-[15px] transition active:scale-[0.97]
+            ${groupWon ? "bg-emerald-500 hover:bg-emerald-400" : "bg-brand hover:bg-brand-600"}`}
+          style={{ boxShadow: groupWon ? "0 6px 24px rgba(16,185,129,0.40)" : "0 6px 24px rgba(239,68,68,0.40)" }}
           onClick={startGame}
         >
-          Jogar novamente
+          🔄  Jogar novamente
         </button>
         <div className="flex gap-2">
           <button
-            className="flex-1 py-3 rounded-2xl font-semibold border border-white/12 bg-white/5 hover:bg-white/10 active:scale-[0.97] transition text-sm"
-            onClick={onNewRoom}
+            className="flex-1 py-3 rounded-2xl font-semibold border border-white/[0.09] bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.97] transition text-sm"
+            onClick={reset}
           >
             Nova sala
           </button>
           <button
-            className="flex-1 py-3 rounded-2xl font-semibold border border-white/12 bg-white/5 hover:bg-white/10 active:scale-[0.97] transition text-sm"
+            className="flex-1 py-3 rounded-2xl font-semibold border border-white/[0.09] bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.97] transition text-sm text-white/50"
             onClick={onResetHistory}
           >
             Repor histórico

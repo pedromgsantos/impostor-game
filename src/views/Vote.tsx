@@ -34,16 +34,23 @@ export default function Vote() {
 
   return (
     <div className="app-container">
-      <header className="screen pt-3 text-center px-4">
-        <p className="text-xs text-white/50">Fase</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Votação</h1>
-        <p className="mt-1 text-xs text-white/45">
-          Escolham 1 suspeito e confirmem.
+      <header className="screen pt-5 text-center px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className="text-4xl mb-3"
+        >
+          🗳️
+        </motion.div>
+        <h1 className="text-2xl font-bold tracking-tight">Votação</h1>
+        <p className="mt-1 text-sm text-white/40">
+          Quem é o impostor?
         </p>
       </header>
 
-      <main className="screen flex-1 px-4 py-3 pb-28">
-        <div role="radiogroup" aria-label="Lista de suspeitos" className="max-w-md mx-auto space-y-2.5">
+      <main className="screen flex-1 px-4 py-4 pb-28">
+        <div role="radiogroup" aria-label="Lista de suspeitos" className="space-y-2.5 max-w-md mx-auto">
           {players?.map((name, i) => {
             const isSelected = selected === i;
             return (
@@ -51,33 +58,41 @@ export default function Vote() {
                 key={i}
                 role="radio"
                 aria-checked={isSelected}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.055, duration: 0.25, ease: "easeOut" }}
+                initial={{ opacity: 0, x: -16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.06, duration: 0.25, ease: "easeOut" }}
                 onClick={() => { setSelected(i); vibrate(5); }}
-                className={`w-full text-left rounded-2xl border transition-all duration-150
-                  px-4 py-3.5 active:scale-[0.98]
+                className={`w-full text-left rounded-2xl border transition-all duration-200 px-4 py-4 active:scale-[0.97]
                   ${isSelected
-                    ? "border-amber-400/50 ring-2 ring-amber-400/30 bg-amber-400/[0.06]"
-                    : "border-white/8 bg-white/[0.04] hover:bg-white/[0.07]"
+                    ? "border-brand/45 bg-brand/[0.08] shadow-[0_0_24px_rgba(239,68,68,0.14)]"
+                    : "border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.07]"
                   }`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`grid place-items-center w-9 h-9 rounded-full shrink-0 text-lg transition-colors duration-150
-                        ${isSelected ? "bg-amber-500/20" : "bg-white/10"}`}>
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <motion.span
+                      className="text-2xl shrink-0"
+                      animate={isSelected ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       {playerEmoji(i)}
-                    </div>
-                    <span className="font-semibold truncate">{name}</span>
+                    </motion.span>
+                    <span className={`font-semibold text-[15px] truncate transition-colors duration-150 ${isSelected ? "text-white" : "text-white/75"}`}>
+                      {name}
+                    </span>
                   </div>
 
-                  <span className={`text-[11px] px-2 py-1 rounded-full border shrink-0 transition-all duration-150
+                  <motion.span
+                    className={`text-[11px] px-2.5 py-1 rounded-full border shrink-0 font-medium transition-all duration-150
                       ${isSelected
-                        ? "border-amber-400/50 bg-amber-400/10 text-amber-300"
-                        : "border-white/10 bg-white/5 text-white/50"
-                      }`}>
-                    {isSelected ? "Selecionado" : "Suspeito"}
-                  </span>
+                        ? "border-brand/50 bg-brand/15 text-brand"
+                        : "border-white/10 bg-white/5 text-white/35"
+                      }`}
+                    animate={isSelected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    {isSelected ? "Selecionado" : "Suspeito?"}
+                  </motion.span>
                 </div>
               </motion.button>
             );
@@ -87,17 +102,29 @@ export default function Vote() {
 
       <div className="bottom-bar">
         <div className="bottom-inner max-w-md mx-auto w-full">
-          <button
-            className="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+          <motion.button
+            className={`w-full py-4 rounded-2xl font-bold text-[15px] transition-all duration-300
+              ${canConfirm
+                ? "bg-brand text-white"
+                : "bg-white/[0.05] text-white/25 cursor-not-allowed border border-white/[0.07]"
+              }`}
+            animate={canConfirm ? {
+              boxShadow: [
+                "0 6px 24px rgba(239,68,68,0.35)",
+                "0 8px 36px rgba(239,68,68,0.55)",
+                "0 6px 24px rgba(239,68,68,0.35)",
+              ],
+            } : { boxShadow: "none" }}
+            transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
             disabled={!canConfirm}
             onClick={() => setConfirmOpen(true)}
           >
-            Confirmar suspeito
-          </button>
+            {canConfirm ? "⚖️  Confirmar suspeito" : "Seleciona um suspeito"}
+          </motion.button>
         </div>
       </div>
 
-      {/* modal de confirmação */}
+      {/* Modal de confirmação */}
       <AnimatePresence>
         {confirmOpen && (
           <motion.div
@@ -107,37 +134,40 @@ export default function Vote() {
             exit={{ opacity: 0 }}
           >
             <div
-              className="absolute inset-0 bg-black/65 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setConfirmOpen(false)}
             />
             <motion.div
-              initial={{ y: 24, opacity: 0, scale: 0.97 }}
-              animate={{ y: 0,  opacity: 1, scale: 1 }}
-              exit={{ y: 12,    opacity: 0, scale: 0.98 }}
+              initial={{ y: 28, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 16, opacity: 0, scale: 0.97 }}
               transition={{ type: "spring", stiffness: 320, damping: 26 }}
-              className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900/95 p-6 shadow-2xl"
+              className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-[#1a1525]/97 p-6 shadow-2xl"
             >
-              <h2 className="text-lg font-semibold">Confirmar suspeito?</h2>
-              <p className="text-sm text-white/70 mt-2 leading-relaxed">
-                Tens a certeza que querem acusar{" "}
-                <span className="font-semibold text-white">
-                  {selected !== null ? players[selected] : "—"}
-                </span>
-                ?
-              </p>
+              <div className="text-center mb-4">
+                <div className="text-4xl mb-2">
+                  {selected !== null ? playerEmoji(selected) : "🤔"}
+                </div>
+                <h2 className="text-lg font-bold">
+                  {selected !== null ? players?.[selected] : "—"}
+                </h2>
+                <p className="text-sm text-white/50 mt-1">
+                  Têm a certeza que querem acusar esta pessoa?
+                </p>
+              </div>
 
-              <div className="mt-5 flex items-center justify-end gap-2">
+              <div className="flex gap-2">
                 <button
-                  className="px-4 py-2 rounded-xl border border-white/12 bg-white/5 hover:bg-white/10 text-sm transition"
+                  className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-semibold transition"
                   onClick={() => setConfirmOpen(false)}
                 >
-                  Voltar
+                  Cancelar
                 </button>
                 <button
-                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.97] font-semibold text-sm transition"
+                  className="flex-1 py-3 rounded-xl bg-brand hover:bg-brand-600 font-bold text-sm transition shadow-[0_4px_16px_rgba(239,68,68,0.35)]"
                   onClick={onConfirm}
                 >
-                  Avançar
+                  Acusar 🔍
                 </button>
               </div>
             </motion.div>
@@ -145,7 +175,7 @@ export default function Vote() {
         )}
       </AnimatePresence>
 
-      {/* ecrã de suspense */}
+      {/* Ecrã de suspense */}
       <AnimatePresence>
         {revealing && (
           <motion.div
@@ -155,12 +185,18 @@ export default function Vote() {
             exit={{ opacity: 0 }}
           >
             <div className="text-center">
-              <p className="text-sm text-white/60 mb-3">A revelar...</p>
-              <div className="text-4xl">🤫</div>
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                <div className="w-2 h-2 rounded-full bg-white/60 animate-pulse [animation-delay:130ms]" />
-                <div className="w-2 h-2 rounded-full bg-white/35 animate-pulse [animation-delay:260ms]" />
+              <motion.div
+                className="text-6xl mb-4"
+                animate={{ rotate: [0, -10, 10, -6, 6, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+              >
+                🔍
+              </motion.div>
+              <p className="text-sm text-white/50 mb-4">A revelar...</p>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-brand/60 animate-pulse [animation-delay:130ms]" />
+                <div className="w-2 h-2 rounded-full bg-brand/35 animate-pulse [animation-delay:260ms]" />
               </div>
             </div>
           </motion.div>

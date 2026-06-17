@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
 import { slugifyCard } from "@/utils/slugifyCard";
+import { playerEmoji } from "@/utils/playerEmoji";
 
 export default function Assign() {
   const phase   = useGameStore((s) => s.ui.phase);
@@ -22,7 +23,6 @@ export default function Assign() {
 
   const isClashTheme = theme === "royale";
 
-  // guarda: se algo estiver errado volta ao setup
   useEffect(() => {
     if (phase !== "assign") return;
     if (!players || players.length < 3) {
@@ -32,9 +32,7 @@ export default function Assign() {
 
   const order = round?.revealOrder ?? [];
   const actualIndex = order[idx] ?? idx;
-
   const currentName = players?.[actualIndex] ?? `Jogador ${actualIndex + 1}`;
-
   const isImpostor = round?.impostorIndex === actualIndex;
 
   const revealText = useMemo(() => {
@@ -51,25 +49,18 @@ export default function Assign() {
     return "És do grupo";
   }, [isImpostor, mode]);
 
-  // imagem da carta — só para jogadores do grupo no tema Royale (impostor joga no escuro)
   const cardImageSrc = useMemo(() => {
     if (!isClashTheme || isImpostor || !revealText) return null;
     const slug = slugifyCard(revealText);
     return `${import.meta.env.BASE_URL}cards/${slug}.png`;
   }, [isClashTheme, isImpostor, revealText]);
 
-  // visibilidade do cartão secreto
   const cardVisible = isHolding && (dragY <= -24 || holdTimerRef.current === -1);
 
   const vibrate = (ms = 10) => {
-    try {
-      navigator.vibrate?.(ms);
-    } catch {
-      // ignore
-    }
+    try { navigator.vibrate?.(ms); } catch { /* ignore */ }
   };
 
-  // long-press
   const startHoldTimer = () => {
     clearHoldTimer();
     holdTimerRef.current = window.setTimeout(() => {
@@ -98,8 +89,7 @@ export default function Assign() {
     const rect = surfaceRef.current?.getBoundingClientRect();
     if (!rect) return;
     const centerY = rect.top + rect.height / 2;
-    const deltaY = e.clientY - centerY;
-    setDragY(deltaY);
+    setDragY(e.clientY - centerY);
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
@@ -142,21 +132,42 @@ export default function Assign() {
     vibrate(6);
   };
 
+  const total = players?.length ?? 0;
+
   return (
     <div className="app-container">
-      {/* cabeçalho */}
-      <header className="screen pt-2 text-center px-4">
-        <p className="text-xs opacity-70">Fase</p>
-        <h1 className="text-xl font-semibold tracking-tight">Atribuição Secreta</h1>
-
-        <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs">
-          <span className="opacity-75">Agora:</span>
-          <span className="font-semibold text-brand">{currentName}</span>
-          <span className="opacity-60">vê se é impostor ou não</span>
+      {/* Header com progress */}
+      <header className="screen pt-4 text-center px-4">
+        {/* Progress dots */}
+        <div className="flex items-center justify-center gap-1.5 mb-4">
+          {players?.map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                width: i === idx ? 24 : i < idx ? 16 : 6,
+                opacity: i < idx ? 0.4 : i === idx ? 1 : 0.2,
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={`h-1.5 rounded-full ${i <= idx ? "bg-brand" : "bg-white/20"}`}
+            />
+          ))}
         </div>
+
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+          className="inline-flex items-center gap-2.5 rounded-full border border-white/[0.09] bg-white/[0.05] px-4 py-2"
+        >
+          <span className="text-xl leading-none">{playerEmoji(actualIndex)}</span>
+          <span className="font-semibold text-[15px]">{currentName}</span>
+          <span className="text-white/30 text-xs">·</span>
+          <span className="text-white/45 text-xs">{idx + 1} de {total}</span>
+        </motion.div>
       </header>
 
-      {/* corpo principal */}
+      {/* Corpo principal */}
       <main className="screen flex-1 px-4 flex flex-col">
         <div className="flex-1" />
 
@@ -166,48 +177,46 @@ export default function Assign() {
             role="button"
             aria-label="Arrasta para cima e mantém para ver o teu papel"
             aria-live="polite"
-            className="relative w-full h-[min(56vh,520px)] rounded-2xl bg-[#18131f]/95 border border-white/[0.12] shadow-[0_24px_60px_-8px_rgba(0,0,0,0.70)] overflow-hidden touch-none"
+            className="relative w-full h-[min(54vh,500px)] rounded-2xl bg-[#18131f]/95 border border-white/[0.12] shadow-[0_24px_60px_-8px_rgba(0,0,0,0.70)] overflow-hidden touch-none"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
           >
-            {/* nome do jogador dentro do cartão */}
+            {/* Nome + avatar no topo do cartão */}
             <div className="absolute top-6 inset-x-0 text-center pointer-events-none">
-              <div className="font-extrabold tracking-tight text-[clamp(22px,7.2vw,40px)]">
+              <div className="text-4xl mb-1">{playerEmoji(actualIndex)}</div>
+              <div className="font-bold tracking-tight text-[clamp(20px,6.5vw,36px)]">
                 {currentName}
               </div>
             </div>
 
-            {/* instruções, escondem quando o cartão é mostrado */}
+            {/* Instruções */}
             {!cardVisible && (
               <motion.div
                 className="absolute inset-0 grid place-items-center p-6"
                 animate={{ y: Math.max(-12, Math.min(0, dragY * 0.15)) }}
                 transition={{ type: "spring", stiffness: 250, damping: 24 }}
               >
-                <div className="text-center space-y-3">
-                  <p className="text-[13px] md:text-sm opacity-80">
-                    <span className="opacity-70">Só</span>{" "}
-                    <span className="font-semibold">{currentName}</span>{" "}
-                    <span className="opacity-70">deve ver agora</span>
+                <div className="text-center space-y-3 mt-16">
+                  <p className="text-[13px] opacity-60">
+                    Só <span className="font-semibold text-white/90">{currentName}</span> deve ver
                   </p>
-                  <p className="text-[13px] md:text-sm opacity-80">
-                    Arrasta para cima e mantém
-                  </p>
-                  <p className="text-xs opacity-60">
-                    ou usa “Tocar &amp; Manter” abaixo
-                  </p>
-                  <div className="mt-2 flex items-center justify-center gap-2 opacity-50">
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse [animation-delay:150ms]" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/30 animate-pulse [animation-delay:300ms]" />
+                  <div className="flex flex-col items-center gap-1.5 mt-2">
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
+                      className="text-2xl opacity-50"
+                    >
+                      ☝️
+                    </motion.div>
+                    <p className="text-xs text-white/40">Arrasta para cima e mantém</p>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* cartão secreto */}
+            {/* Cartão secreto */}
             <AnimatePresence>
               {cardVisible && (
                 <motion.div
@@ -220,18 +229,16 @@ export default function Assign() {
                 >
                   <div
                     className={`mx-5 w-full rounded-2xl border px-5 py-6 text-center shadow-xl
-                      ${
-                        isImpostor
-                          ? "bg-rose-600/90 border-rose-300/50"
-                          : "bg-emerald-600/90 border-emerald-300/50"
+                      ${isImpostor
+                        ? "bg-rose-600/90 border-rose-300/50"
+                        : "bg-emerald-600/90 border-emerald-300/50"
                       } text-white`}
                   >
-                    <p className="text-[11px] uppercase tracking-widest/ wide">
+                    <p className="text-[11px] uppercase tracking-widest opacity-80">
                       Para: <span className="font-semibold">{currentName}</span>
                     </p>
-                    <p className="mt-1 text-xs/relaxed opacity-90">O teu papel</p>
-                    <p className="mt-1 text-[13px] opacity-95">{subtitle}</p>
-                    {/* impostor no Royale: visual de mistério sem imagem */}
+                    <p className="mt-1 text-xs opacity-70">{subtitle}</p>
+
                     {isClashTheme && isImpostor ? (
                       <div className="mt-4 flex flex-col items-center gap-2">
                         <div className="w-20 h-28 rounded-xl bg-black/40 border-2 border-rose-300/30 flex flex-col items-center justify-center gap-1">
@@ -242,7 +249,7 @@ export default function Assign() {
                       </div>
                     ) : (
                       <>
-                        <p className="mt-4 text-[clamp(28px,8.2vw,40px)] font-bold break-words leading-tight">
+                        <p className="mt-4 text-[clamp(26px,8vw,40px)] font-bold break-words leading-tight">
                           {revealText}
                         </p>
                         {isClashTheme && cardImageSrc && (
@@ -262,7 +269,7 @@ export default function Assign() {
               )}
             </AnimatePresence>
 
-            {/* máscara de revelação */}
+            {/* Máscara de revelação */}
             <motion.div
               aria-hidden
               className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent"
@@ -272,43 +279,42 @@ export default function Assign() {
               }}
             />
 
-            {/* aviso anti-batota */}
+            {/* Aviso anti-batota */}
             <div className="absolute bottom-0 inset-x-0 p-4 flex items-center justify-center">
-              <p className="text-[11px] text-center opacity-70">
-                ⚠️ Jogo justo: sem espreitar, sem screenshots.
+              <p className="text-[11px] text-center opacity-50">
+                ⚠️ Jogo justo — sem espreitar nem screenshots
               </p>
             </div>
           </div>
         </div>
 
-        {/* botão “Tocar & Manter” logo abaixo do cartão */}
-        <div className="mt-4 mb-6 flex items-center justify-center">
+        {/* Botão tocar & manter */}
+        <div className="mt-4 mb-4 flex items-center justify-center">
           <button
-            className="px-4 py-2 rounded-2xl border border-white/20 bg-white/10 hover:bg-white/15 active:scale-[0.98] transition text-sm"
+            className="px-5 py-2.5 rounded-2xl border border-white/15 bg-white/8 hover:bg-white/12 active:scale-[0.97] transition text-sm text-white/70"
             aria-label="Tocar e manter para ver o teu papel"
             onPointerDown={onTapHoldButtonDown}
             onPointerUp={onTapHoldButtonUp}
             onPointerCancel={onTapHoldButtonUp}
           >
-            Tocar &amp; Manter
+            👆 Tocar &amp; Manter
           </button>
         </div>
 
         <div className="flex-1" />
       </main>
 
-      {/* bottom bar */}
       <div className="bottom-bar">
         <div className="bottom-inner">
           <button
-            className="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-primary w-full disabled:opacity-35 disabled:cursor-not-allowed"
             aria-disabled={!hasRevealed}
             disabled={!hasRevealed}
             onClick={onContinue}
           >
-            {idx < (players?.length ?? 0) - 1 ? "Continuar" : "Começar ronda"}
+            {idx < (players?.length ?? 0) - 1 ? "Continuar →" : "Começar ronda 🎮"}
           </button>
-          <p className="mt-2 text-center text-[11px] opacity-50">
+          <p className="mt-2 text-center text-[11px] opacity-35">
             Nada fica visível quando largas o ecrã.
           </p>
         </div>

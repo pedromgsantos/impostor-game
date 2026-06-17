@@ -66,7 +66,7 @@ export default function Result() {
               : "border-rose-500/25 bg-rose-500/[0.08]"
           }`}>
             <p className="text-xs uppercase tracking-widest text-white/50 mb-1">Vencedor</p>
-            <h2 className={`text-3xl font-black tracking-tight ${
+            <h2 className={`text-3xl font-bold tracking-tight ${
               groupWon ? "text-emerald-300" : "text-rose-300"
             }`}>
               {groupWon ? "Grupo venceu 🎉" : "Impostor venceu 😈"}

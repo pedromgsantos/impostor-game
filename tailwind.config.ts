@@ -5,7 +5,7 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          "Inter",
+          "Instrument Sans",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",

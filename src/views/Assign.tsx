@@ -166,7 +166,7 @@ export default function Assign() {
             role="button"
             aria-label="Arrasta para cima e mantém para ver o teu papel"
             aria-live="polite"
-            className="relative w-full h-[min(56vh,520px)] rounded-[28px] bg-slate-900/98 backdrop-blur-md border border-white/20 shadow-[0_28px_80px_-12px_rgba(0,0,0,0.70)] overflow-hidden touch-none"
+            className="relative w-full h-[min(56vh,520px)] rounded-2xl bg-[#18131f]/95 border border-white/[0.12] shadow-[0_24px_60px_-8px_rgba(0,0,0,0.70)] overflow-hidden touch-none"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}

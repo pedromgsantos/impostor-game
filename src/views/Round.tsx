@@ -1,7 +1,7 @@
-// src/views/Round.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { playerEmoji } from "@/utils/playerEmoji";
 
 function formatTime(total: number) {
   const m = Math.floor(total / 60).toString().padStart(2, "0");
@@ -49,7 +49,7 @@ export default function Round() {
           vibrate(40);
           vibratedRef.current = true;
           setDing(true);
-          window.setTimeout(() => setDing(false), 2000);
+          window.setTimeout(() => setDing(false), 2500);
         }
         return next;
       });
@@ -70,105 +70,150 @@ export default function Round() {
   const timeStr = useMemo(() => formatTime(seconds), [seconds]);
 
   const timerColor = isDone
-    ? "text-white/30"
+    ? "text-white/20"
     : isLow
     ? "text-rose-400"
     : !running
-    ? "text-white/40"
+    ? "text-white/35"
     : "text-white";
-
-  const timerGlow = isLow && running && !isDone
-    ? "drop-shadow-[0_0_20px_rgba(239,68,68,.55)]"
-    : "";
 
   return (
     <div className="app-container">
-      <header className="screen pt-2 text-center px-4">
-        <p className="text-xs text-white/50">Fase</p>
-        <h1 className="text-xl font-semibold tracking-tight">Ronda</h1>
-
-        <div className="phase-badge mt-2">
-          <span className="text-white/60">Começa:</span>
-          <span className="font-semibold text-brand">{firstPlayerName}</span>
-        </div>
-      </header>
-
-      <main className="screen flex-1 px-4 pb-28 flex flex-col">
+      {/* Header */}
+      <motion.header
+        className="screen pt-5 pb-2 text-center px-4"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+      >
         <motion.div
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 280, damping: 22 }}
-          className="text-center mt-6 md:mt-8"
+          className="text-4xl mb-3 inline-block"
+          animate={{ rotate: [0, -6, 6, -3, 0] }}
+          transition={{ delay: 0.3, duration: 0.6, ease: "easeInOut" }}
         >
-          <div className="font-extrabold tracking-tight text-[clamp(24px,8vw,48px)]">
-            {firstPlayerName}
+          💬
+        </motion.div>
+        <h1 className="text-2xl font-bold tracking-tight">Discussão</h1>
+        <p className="mt-1 text-sm text-white/40">Descubram o impostor sem revelar a palavra</p>
+      </motion.header>
+
+      <main className="screen flex-1 px-4 pb-28 flex flex-col items-center">
+        {/* Quem começa */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.28 }}
+          className="mt-4 flex flex-col items-center gap-2"
+        >
+          <p className="text-[10px] uppercase tracking-[0.12em] text-white/30">Começa a falar</p>
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-brand/30 bg-brand/[0.07] px-4 py-2 shadow-[0_0_18px_rgba(239,68,68,0.10)]">
+            <span className="text-xl leading-none">{playerEmoji(firstPlayerIdx)}</span>
+            <span className="font-semibold text-[15px] text-white">{firstPlayerName}</span>
           </div>
-          <p className="mt-1 text-xs text-white/40">começa a falar</p>
         </motion.div>
 
         <div className="flex-1" />
 
-        {/* temporizador */}
-        <div className="relative w-full select-none">
-          <motion.div
-            key={timeStr}
-            initial={{ scale: 0.97, opacity: 0.7 }}
-            animate={{ scale: 1,    opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 24 }}
-            aria-live="polite"
-            aria-atomic
-            onClick={() => hasTimer && !isDone && setRunning((r) => !r)}
-            className={`cursor-default mx-auto w-fit text-center transition-colors duration-300 ${timerColor} ${timerGlow}`}
-          >
-            <div className="leading-[0.9] font-black tabular-nums text-[clamp(72px,26vw,168px)]">
-              {hasTimer ? timeStr : "--:--"}
+        {/* Timer */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.22, type: "spring", stiffness: 260, damping: 20 }}
+          className="relative flex flex-col items-center"
+        >
+          {/* Anel de progresso visual (só quando tem timer) */}
+          {hasTimer && (
+            <div className="relative">
+              <AnimatePresence>
+                {isLow && !isDone && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: "radial-gradient(circle, rgba(239,68,68,0.12) 0%, transparent 70%)",
+                      transform: "scale(1.6)",
+                    }}
+                  />
+                )}
+              </AnimatePresence>
+
+              <motion.button
+                key={isDone ? "done" : running ? "running" : "paused"}
+                aria-live="polite"
+                aria-label={running ? "Pausar temporizador" : "Retomar temporizador"}
+                onClick={() => hasTimer && !isDone && setRunning((r) => !r)}
+                className={`relative tabular-nums font-black leading-none select-none transition-colors duration-300
+                  text-[clamp(80px,28vw,172px)] ${timerColor}
+                  ${isLow && running && !isDone ? "drop-shadow-[0_0_28px_rgba(239,68,68,0.50)]" : ""}
+                  ${hasTimer && !isDone ? "cursor-pointer" : "cursor-default"}`}
+                animate={isLow && running && !isDone ? {
+                  scale: [1, 1.015, 1],
+                } : { scale: 1 }}
+                transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
+              >
+                {hasTimer ? timeStr : "--:--"}
+              </motion.button>
             </div>
+          )}
 
-            {hasTimer && !isDone && (
-              <p className="mt-3 text-xs text-white/40">
-                {running ? "Toque para pausar" : "Toque para retomar"}
-              </p>
-            )}
-          </motion.div>
+          {!hasTimer && (
+            <div className="tabular-nums font-black leading-none select-none text-white/20 text-[clamp(80px,28vw,172px)]">
+              --:--
+            </div>
+          )}
 
-          {/* notificação de tempo esgotado */}
+          {/* Hint de tap */}
+          {hasTimer && !isDone && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-3 text-xs text-white/35"
+            >
+              {running ? "Toca para pausar" : "Toca para retomar"}
+            </motion.p>
+          )}
+
+          {/* Toast de tempo esgotado */}
           <AnimatePresence>
             {ding && (
               <motion.div
-                initial={{ y: -10, opacity: 0, scale: 0.9 }}
-                animate={{ y: 0,   opacity: 1, scale: 1 }}
-                exit={{ y: -10,    opacity: 0, scale: 0.9 }}
-                className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs px-3 py-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300"
+                initial={{ y: 12, opacity: 0, scale: 0.9 }}
+                animate={{ y: 0,  opacity: 1, scale: 1 }}
+                exit={{ y: -8,   opacity: 0, scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 320, damping: 24 }}
+                className="mt-4 px-4 py-2 rounded-full border border-rose-500/40 bg-rose-500/15 text-rose-300 text-sm font-semibold"
               >
-                Tempo esgotado
+                ⏰ Tempo esgotado!
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+
+          {isDone && !ding && (
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 text-sm text-white/30"
+            >
+              Está na hora de votar
+            </motion.p>
+          )}
+        </motion.div>
 
         <div className="flex-1" />
-
-        <div className="mb-4 flex flex-col items-center gap-3">
-          {hasTimer && !isDone && (
-            <button
-              className="px-5 py-2 rounded-2xl border border-white/12 bg-white/5 hover:bg-white/10 active:scale-[0.97] transition text-sm text-white/80"
-              onClick={() => setRunning((r) => !r)}
-              aria-pressed={running}
-            >
-              {running ? "Pausar" : "Retomar"}
-            </button>
-          )}
-          <p className="text-[11px] text-white/40 text-center max-w-xs">
-            O temporizador não avança automaticamente. Usa o botão abaixo quando a discussão terminar.
-          </p>
-        </div>
       </main>
 
       <div className="bottom-bar">
         <div className="bottom-inner">
-          <button className="btn-primary w-full" onClick={() => toPhase("vote")}>
-            Votar
-          </button>
+          <motion.button
+            className="btn-primary w-full"
+            whileTap={{ scale: 0.97 }}
+            onClick={() => toPhase("vote")}
+          >
+            Votar 🗳️
+          </motion.button>
         </div>
       </div>
     </div>

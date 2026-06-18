@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getNextWords } from "@/services/wordManager";
 
-export type Phase = "setup" | "assign" | "round" | "vote" | "lastchance" | "result";
+export type Phase = "setup" | "assign" | "round" | "vote" | "vote2" | "lastchance" | "result";
 
 export interface UIState {
   phase: Phase;
@@ -19,6 +19,7 @@ export interface RoomState {
 
 export interface RoundState {
   impostorIndices: number[];
+  caughtImpostorIndices: number[];
   realWord: string | null;
   impostorWord: string | null;
   firstPlayerIndex: number;
@@ -126,6 +127,7 @@ export const useGameStore = create<GameState>()(
             set({
               round: {
                 impostorIndices,
+                caughtImpostorIndices: [],
                 realWord: real,
                 impostorWord: effectiveMode === "normal" ? impostor : null,
                 firstPlayerIndex,
@@ -151,18 +153,39 @@ export const useGameStore = create<GameState>()(
 
         const isImpostor = round.impostorIndices.includes(i);
 
-        if (isImpostor && room.lastChance) {
+        if (!isImpostor) {
           set({
-            round: { ...round, chosenSuspect: i },
-            ui: { phase: "lastchance" },
+            round: { ...round, chosenSuspect: i, winner: "impostor" },
+            ui: { phase: "result" },
           });
           return;
         }
 
-        set({
-          round: { ...round, chosenSuspect: i, winner: isImpostor ? "group" : "impostor" },
-          ui: { phase: "result" },
-        });
+        // Impostor apanhado — verificar se faltam mais
+        const newCaught = [...(round.caughtImpostorIndices ?? []), i];
+        const allCaught = round.impostorIndices.every((idx) => newCaught.includes(idx));
+
+        if (!allCaught) {
+          // Ainda falta apanhar mais um impostor → segunda votação
+          set({
+            round: { ...round, chosenSuspect: i, caughtImpostorIndices: newCaught },
+            ui: { phase: "vote2" },
+          });
+          return;
+        }
+
+        // Todos os impostores apanhados
+        if (room.lastChance) {
+          set({
+            round: { ...round, chosenSuspect: i, caughtImpostorIndices: newCaught },
+            ui: { phase: "lastchance" },
+          });
+        } else {
+          set({
+            round: { ...round, chosenSuspect: i, caughtImpostorIndices: newCaught, winner: "group" },
+            ui: { phase: "result" },
+          });
+        }
       },
 
       resolveLastChance: (guessedWord) => {

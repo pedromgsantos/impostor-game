@@ -6,6 +6,7 @@ import { playerEmoji } from "@/utils/playerEmoji";
 
 export default function Vote() {
   const toPhase     = useGameStore((s) => s.toPhase);
+  const phase       = useGameStore((s) => s.ui.phase);
   const players     = useGameStore((s) => s.room.players);
   const round       = useGameStore((s) => s.round);
   const voteSuspect = useGameStore((s) => s.voteSuspect);
@@ -17,6 +18,9 @@ export default function Vote() {
   useEffect(() => {
     if (!round || !players || players.length < 3) toPhase("setup");
   }, [round, players, toPhase]);
+
+  const isSecondVote  = phase === "vote2";
+  const caughtIndices = round?.caughtImpostorIndices ?? [];
 
   const canConfirm = useMemo(() => selected !== null, [selected]);
 
@@ -41,18 +45,54 @@ export default function Vote() {
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className="text-4xl mb-3"
         >
-          🗳️
+          {isSecondVote ? "🎯" : "🗳️"}
         </motion.div>
-        <h1 className="text-2xl font-bold tracking-tight">Votação</h1>
+        <h1 className="text-2xl font-bold tracking-tight">
+          {isSecondVote ? "Segundo voto" : "Votação"}
+        </h1>
         <p className="mt-1 text-sm text-white/40">
-          Quem é o impostor?
+          {isSecondVote ? "Encontra o segundo impostor!" : "Quem é o impostor?"}
         </p>
+
+        {/* Banner "primeiro impostor apanhado" */}
+        {isSecondVote && caughtIndices.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs text-emerald-300"
+          >
+            <span>✓</span>
+            <span>
+              {players?.[caughtIndices[0]] ?? "Jogador"} apanhado — falta um!
+            </span>
+          </motion.div>
+        )}
       </header>
 
       <main className="screen flex-1 px-4 py-4 pb-28">
         <div role="radiogroup" aria-label="Lista de suspeitos" className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {players?.map((name, i) => {
             const isSelected = selected === i;
+            const isCaught   = caughtIndices.includes(i);
+
+            if (isCaught) {
+              return (
+                <div
+                  key={i}
+                  className="aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-400/[0.06] p-4 opacity-60"
+                >
+                  <span className="text-5xl">{playerEmoji(i)}</span>
+                  <span className="font-semibold text-[14px] text-center leading-tight text-emerald-300">
+                    {name}
+                  </span>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-emerald-400/40 bg-emerald-400/15 text-emerald-300 font-semibold">
+                    Apanhado ✓
+                  </span>
+                </div>
+              );
+            }
+
             return (
               <motion.button
                 key={i}

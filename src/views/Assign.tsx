@@ -168,7 +168,7 @@ export default function Assign() {
       </header>
 
       {/* Corpo principal */}
-      <main className="screen flex-1 px-4 flex flex-col">
+      <main className="screen flex-1 px-4 pb-28 flex flex-col">
         <div className="flex-1" />
 
         <div className="mx-auto w-full max-w-[520px]">

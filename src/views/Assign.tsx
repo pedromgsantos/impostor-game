@@ -228,42 +228,54 @@ export default function Assign() {
                   className="absolute inset-0 grid place-items-center"
                 >
                   <div
-                    className={`mx-5 w-full rounded-2xl border px-5 py-6 text-center shadow-xl
+                    className={`mx-4 w-full rounded-3xl border shadow-2xl overflow-hidden text-white
                       ${isImpostor
-                        ? "bg-rose-600/90 border-rose-300/50"
-                        : "bg-emerald-600/90 border-emerald-300/50"
-                      } text-white`}
+                        ? "bg-rose-600 border-rose-400/40"
+                        : "bg-emerald-600 border-emerald-400/40"
+                      }`}
                   >
-                    <p className="text-[11px] uppercase tracking-widest opacity-80">
-                      Para: <span className="font-semibold">{currentName}</span>
-                    </p>
-                    <p className="mt-1 text-xs opacity-70">{subtitle}</p>
+                    {/* Header */}
+                    <div className="px-6 pt-7 pb-4 text-center">
+                      <div className="text-5xl mb-3">{playerEmoji(actualIndex)}</div>
+                      <p className="text-[10px] uppercase tracking-[0.15em] opacity-60">Para</p>
+                      <p className="font-bold text-lg mt-0.5">{currentName}</p>
+                    </div>
 
-                    {isClashTheme && isImpostor ? (
-                      <div className="mt-4 flex flex-col items-center gap-2">
-                        <div className="w-20 h-28 rounded-xl bg-black/40 border-2 border-rose-300/30 flex flex-col items-center justify-center gap-1">
-                          <span className="text-3xl">😈</span>
-                          <span className="text-[10px] text-rose-200/70 uppercase tracking-widest">Impostor</span>
+                    {/* Divider */}
+                    <div className="mx-6 h-px bg-white/25" />
+
+                    {/* Word */}
+                    <div className="px-6 py-7 text-center">
+                      {isClashTheme && isImpostor ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-5xl">😈</span>
+                          <p className="text-[clamp(24px,7vw,36px)] font-black">Boa sorte</p>
                         </div>
-                        <p className="text-[clamp(20px,6vw,30px)] font-bold">Boa sorte</p>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="mt-4 text-[clamp(26px,8vw,40px)] font-bold break-words leading-tight">
-                          {revealText}
-                        </p>
-                        {isClashTheme && cardImageSrc && (
-                          <div className="mt-3 flex justify-center">
-                            <img
-                              src={cardImageSrc}
-                              alt={revealText}
-                              loading="lazy"
-                              className="h-24 md:h-28 object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"
-                            />
-                          </div>
-                        )}
-                      </>
-                    )}
+                      ) : (
+                        <>
+                          <p className="text-[clamp(34px,10vw,52px)] font-black break-words leading-none tracking-tight">
+                            {revealText}
+                          </p>
+                          {isClashTheme && cardImageSrc && (
+                            <div className="mt-4 flex justify-center">
+                              <img
+                                src={cardImageSrc}
+                                alt={revealText}
+                                loading="lazy"
+                                className="h-24 md:h-28 object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)]"
+                              />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Footer badge */}
+                    <div className="pb-6 text-center">
+                      <span className="text-xs px-3 py-1 rounded-full bg-black/20 border border-white/20">
+                        {subtitle}
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               )}

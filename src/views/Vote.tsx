@@ -50,7 +50,7 @@ export default function Vote() {
       </header>
 
       <main className="screen flex-1 px-4 py-4 pb-28">
-        <div role="radiogroup" aria-label="Lista de suspeitos" className="space-y-2.5 max-w-md mx-auto">
+        <div role="radiogroup" aria-label="Lista de suspeitos" className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {players?.map((name, i) => {
             const isSelected = selected === i;
             return (
@@ -58,42 +58,39 @@ export default function Vote() {
                 key={i}
                 role="radio"
                 aria-checked={isSelected}
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.88 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.06, duration: 0.25, ease: "easeOut" }}
                 onClick={() => { setSelected(i); vibrate(5); }}
-                className={`w-full text-left rounded-2xl border transition-all duration-200 px-4 py-4 active:scale-[0.97]
+                className={`aspect-square flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-200 p-4 active:scale-[0.94]
                   ${isSelected
-                    ? "border-brand/45 bg-brand/[0.08] shadow-[0_0_24px_rgba(239,68,68,0.14)]"
+                    ? "border-brand/50 bg-brand/[0.10] shadow-[0_0_28px_rgba(239,68,68,0.18)]"
                     : "border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.07]"
                   }`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3.5 min-w-0">
+                <motion.span
+                  className="text-5xl"
+                  animate={isSelected ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  {playerEmoji(i)}
+                </motion.span>
+                <span className={`font-semibold text-[14px] text-center leading-tight transition-colors duration-150 ${isSelected ? "text-white" : "text-white/70"}`}>
+                  {name}
+                </span>
+                <AnimatePresence>
+                  {isSelected && (
                     <motion.span
-                      className="text-2xl shrink-0"
-                      animate={isSelected ? { scale: [1, 1.25, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.3 }}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="text-[10px] px-2.5 py-0.5 rounded-full border border-brand/50 bg-brand/15 text-brand font-semibold"
                     >
-                      {playerEmoji(i)}
+                      Selecionado
                     </motion.span>
-                    <span className={`font-semibold text-[15px] truncate transition-colors duration-150 ${isSelected ? "text-white" : "text-white/75"}`}>
-                      {name}
-                    </span>
-                  </div>
-
-                  <motion.span
-                    className={`text-[11px] px-2.5 py-1 rounded-full border shrink-0 font-medium transition-all duration-150
-                      ${isSelected
-                        ? "border-brand/50 bg-brand/15 text-brand"
-                        : "border-white/10 bg-white/5 text-white/35"
-                      }`}
-                    animate={isSelected ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    {isSelected ? "Selecionado" : "Suspeito?"}
-                  </motion.span>
-                </div>
+                  )}
+                </AnimatePresence>
               </motion.button>
             );
           })}

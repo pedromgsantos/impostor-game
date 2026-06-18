@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useGameStore } from "./store/game";
+import Toast from "./components/Toast";
 import Setup from "./views/Setup";
 import Assign from "./views/Assign";
 import Round from "./views/Round";
@@ -26,6 +27,8 @@ export default function App() {
   prevRef.current = phase;
 
   return (
+    <>
+    <Toast />
     <AnimatePresence mode="wait" custom={dir}>
       <motion.div
         key={phase}
@@ -45,5 +48,6 @@ export default function App() {
         {phase === "result"     && <Result />}
       </motion.div>
     </AnimatePresence>
+    </>
   );
 }

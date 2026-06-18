@@ -1,6 +1,6 @@
 // src/views/Result.tsx
-import { useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useGameStore } from "@/store/game";
 import { resetTheme } from "@/services/wordManager";
@@ -14,6 +14,9 @@ export default function Result() {
   const round     = useGameStore((s) => s.round);
   const startGame = useGameStore((s) => s.startGame);
   const reset     = useGameStore((s) => s.reset);
+  const showToast = useGameStore((s) => s.showToast);
+
+  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     if (!round || !players || players.length < 3) toPhase("setup");
@@ -45,12 +48,11 @@ export default function Result() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [groupWon]);
 
-  const onResetHistory = async () => {
+  const onConfirmReset = async () => {
     if (!theme) return;
-    const ok = confirm(`Repor histórico do tema "${theme}"?`);
-    if (!ok) return;
+    setConfirmReset(false);
     await resetTheme(theme);
-    alert(`Histórico do tema "${theme}" reposto.`);
+    showToast("Histórico reposto com sucesso.", "success");
   };
 
   return (
@@ -143,12 +145,54 @@ export default function Result() {
           </button>
           <button
             className="flex-1 py-3 rounded-2xl font-semibold border border-white/[0.09] bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.97] transition text-sm text-white/50"
-            onClick={onResetHistory}
+            onClick={() => setConfirmReset(true)}
           >
             Repor histórico
           </button>
         </div>
       </motion.footer>
+      {/* Modal de confirmação — repor histórico */}
+      <AnimatePresence>
+        {confirmReset && (
+          <motion.div
+            className="fixed inset-0 z-50 grid place-items-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setConfirmReset(false)} />
+            <motion.div
+              initial={{ y: 24, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 16, opacity: 0, scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 320, damping: 26 }}
+              className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-[#1a1525]/97 p-6 shadow-2xl"
+            >
+              <div className="text-center mb-5">
+                <div className="text-3xl mb-2">🗑️</div>
+                <h2 className="text-base font-bold">Repor histórico</h2>
+                <p className="text-sm text-white/45 mt-1">
+                  As palavras já usadas no tema <span className="text-white/70 font-medium">"{theme}"</span> voltam a estar disponíveis.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-semibold transition"
+                  onClick={() => setConfirmReset(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="flex-1 py-3 rounded-xl bg-brand hover:bg-brand-600 font-bold text-sm transition shadow-[0_4px_16px_rgba(239,68,68,0.35)]"
+                  onClick={onConfirmReset}
+                >
+                  Repor
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

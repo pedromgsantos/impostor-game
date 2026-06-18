@@ -27,16 +27,22 @@ export interface RoundState {
   winner: "group" | "impostor" | null;
 }
 
+export type ToastType = "info" | "warning" | "success";
+export interface Toast { message: string; type: ToastType; id: number; }
+
 export interface GameState {
   ui: UIState;
   room: RoomState;
   round: RoundState | null;
+  toast: Toast | null;
 
   setRoom: (patch: Partial<RoomState>) => void;
   toPhase: (p: Phase) => void;
   startGame: () => void;
   voteSuspect: (i: number) => void;
   resolveLastChance: (guessedWord: string) => void;
+  showToast: (message: string, type?: ToastType) => void;
+  clearToast: () => void;
   reset: () => void;
 }
 
@@ -78,6 +84,7 @@ export const useGameStore = create<GameState>()(
       ui: { phase: "setup" },
       room: initialRoom,
       round: null,
+      toast: null,
 
       setRoom: (patch) =>
         set((s) => ({
@@ -129,8 +136,8 @@ export const useGameStore = create<GameState>()(
               ui: { phase: "assign" },
             });
 
-            if (exhausted && typeof window !== "undefined") {
-              setTimeout(() => alert("Tema esgotado, repor ou mudar."), 0);
+            if (exhausted) {
+              setTimeout(() => get().showToast("Tema esgotado — repõe o histórico ou muda de tema.", "warning"), 0);
             }
           } catch (e) {
             console.error("Erro ao obter palavras:", e);
@@ -167,6 +174,11 @@ export const useGameStore = create<GameState>()(
           ui: { phase: "result" },
         });
       },
+
+      showToast: (message, type = "info") =>
+        set({ toast: { message, type, id: Date.now() } }),
+
+      clearToast: () => set({ toast: null }),
 
       reset: () =>
         set({

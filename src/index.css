@@ -8,12 +8,27 @@
 /* ============ BASE GLOBAL ============ */
 @layer base {
   :root { color-scheme: dark; }
-  html, body, #root { height: 100%; overflow: hidden; }
-  * { -webkit-tap-highlight-color: transparent; }
+
+  html {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     @apply text-white antialiased;
     background: linear-gradient(155deg, #0e0c12 0%, #151220 50%, #120a0f 100%);
   }
+
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 }
 
 /* ============ UTILITIES SAFE-AREA (iOS) ============ */
@@ -29,6 +44,10 @@
 @layer components {
   .app-container {
     @apply h-full flex flex-col;
+    max-width: 440px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
@@ -97,9 +116,17 @@
     @apply text-[10px] font-semibold tracking-[0.10em] uppercase text-white/40 mb-3;
   }
 
-  /* Barra fixa inferior */
+  /* Barra fixa inferior — centrada ao max-width do conteúdo em ecrãs largos */
   .bottom-bar {
-    @apply fixed inset-x-0 bottom-0 z-40 flex justify-center;
+    position: fixed;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    justify-content: center;
+    /* Em mobile (< 440px): left/right = 0 (full width).
+       Em desktop: centra a 440px calculando a margem lateral. */
+    left: max(0px, calc(50% - 220px));
+    right: max(0px, calc(50% - 220px));
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(14,12,18,0.88) 40%, rgba(14,12,18,0.97) 100%);
     backdrop-filter: blur(16px);
     padding-top: 12px;

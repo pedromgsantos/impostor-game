@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getNextWords } from "@/services/wordManager";
 
-export type Phase = "setup" | "assign" | "round" | "vote" | "result";
+export type Phase = "setup" | "assign" | "round" | "vote" | "lastchance" | "result";
 
 export interface UIState {
   phase: Phase;
@@ -13,10 +13,12 @@ export interface RoomState {
   mode: "normal" | "cego";
   theme: string;
   timerSec: number;
+  lastChance: boolean;
+  twoImpostors: boolean;
 }
 
 export interface RoundState {
-  impostorIndex: number;
+  impostorIndices: number[];
   realWord: string | null;
   impostorWord: string | null;
   firstPlayerIndex: number;
@@ -34,6 +36,7 @@ export interface GameState {
   toPhase: (p: Phase) => void;
   startGame: () => void;
   voteSuspect: (i: number) => void;
+  resolveLastChance: (guessedWord: string) => void;
   reset: () => void;
 }
 
@@ -42,6 +45,8 @@ const initialRoom: RoomState = {
   mode: "normal",
   theme: "classic",
   timerSec: 60,
+  lastChance: false,
+  twoImpostors: false,
 };
 
 // embaralha um array (Fisher-Yates)
@@ -54,6 +59,19 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+function pickDistinct(max: number, count: number): number[] {
+  const indices: number[] = [];
+  while (indices.length < count) {
+    const pick = Math.floor(Math.random() * max);
+    if (!indices.includes(pick)) indices.push(pick);
+  }
+  return indices;
+}
+
+function normalize(s: string) {
+  return s.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
@@ -61,13 +79,11 @@ export const useGameStore = create<GameState>()(
       room: initialRoom,
       round: null,
 
-      // altera apenas parte do estado da sala
       setRoom: (patch) =>
         set((s) => ({
           room: { ...s.room, ...patch },
         })),
 
-      // muda de ecrã/fase
       toPhase: (p) =>
         set((s) => ({
           ui: { ...s.ui, phase: p },
@@ -80,7 +96,6 @@ export const useGameStore = create<GameState>()(
 
         (async () => {
           try {
-            // para o tema "royale" o jogo é sempre em modo cego, mesmo que a sala esteja em "normal"
             const effectiveMode: RoomState["mode"] =
               room.theme === "royale" ? "cego" : room.mode;
 
@@ -89,27 +104,22 @@ export const useGameStore = create<GameState>()(
               effectiveMode
             );
 
-            // escolhe o impostor ao acaso
-            const impostorIndex = Math.floor(Math.random() * n);
+            const impostorCount = room.twoImpostors && n >= 5 ? 2 : 1;
+            const impostorIndices = pickDistinct(n, impostorCount);
 
-            // quem começa a falar:
-            //  - normal: qualquer jogador
-            //  - cego: nunca o impostor
             let firstPlayerIndex = Math.floor(Math.random() * n);
             if (effectiveMode === "cego") {
-              while (firstPlayerIndex === impostorIndex) {
+              while (impostorIndices.includes(firstPlayerIndex)) {
                 firstPlayerIndex = Math.floor(Math.random() * n);
               }
             }
 
-            // ordem aleatória de revelação das cartas (índices dos jogadores)
             const revealOrder = shuffle([...Array(n).keys()]);
 
             set({
               round: {
-                impostorIndex,
+                impostorIndices,
                 realWord: real,
-                // só há palavra do impostor quando o modo é normal
                 impostorWord: effectiveMode === "normal" ? impostor : null,
                 firstPlayerIndex,
                 revealOrder,
@@ -119,12 +129,8 @@ export const useGameStore = create<GameState>()(
               ui: { phase: "assign" },
             });
 
-            // tema esgotado: avisa mas não trava o jogo
             if (exhausted && typeof window !== "undefined") {
-              setTimeout(
-                () => alert("Tema esgotado, repor ou mudar."),
-                0
-              );
+              setTimeout(() => alert("Tema esgotado, repor ou mudar."), 0);
             }
           } catch (e) {
             console.error("Erro ao obter palavras:", e);
@@ -132,18 +138,36 @@ export const useGameStore = create<GameState>()(
         })();
       },
 
-      // regista voto e calcula vencedor
       voteSuspect: (i) => {
-        const r = get().round;
-        if (!r) return;
-        const winner = i === r.impostorIndex ? "group" : "impostor";
+        const { round, room } = get();
+        if (!round) return;
+
+        const isImpostor = round.impostorIndices.includes(i);
+
+        if (isImpostor && room.lastChance) {
+          set({
+            round: { ...round, chosenSuspect: i },
+            ui: { phase: "lastchance" },
+          });
+          return;
+        }
+
         set({
-          round: { ...r, chosenSuspect: i, winner },
+          round: { ...round, chosenSuspect: i, winner: isImpostor ? "group" : "impostor" },
           ui: { phase: "result" },
         });
       },
 
-      // volta ao início, mas mantém configuração da sala
+      resolveLastChance: (guessedWord) => {
+        const { round } = get();
+        if (!round) return;
+        const correct = normalize(guessedWord) === normalize(round.realWord ?? "");
+        set({
+          round: { ...round, winner: correct ? "impostor" : "group" },
+          ui: { phase: "result" },
+        });
+      },
+
       reset: () =>
         set({
           ui: { phase: "setup" },
@@ -153,7 +177,6 @@ export const useGameStore = create<GameState>()(
     {
       name: "impostor-game-store",
       storage: createJSONStorage(() => localStorage),
-      // só persistimos o que faz sentido reter entre sessões
       partialize: (s) => ({ ui: s.ui, room: s.room }),
     }
   )

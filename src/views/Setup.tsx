@@ -5,6 +5,30 @@ import { playerEmoji } from "@/utils/playerEmoji";
 
 const TIMER_STEPS = [0, 30, 60, 90, 120, 150, 180, 210, 240] as const;
 
+function ToggleRow({
+  label, description, checked, onChange, disabled = false,
+}: {
+  label: string; description: string;
+  checked: boolean; onChange: (v: boolean) => void; disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => !disabled && onChange(!checked)}
+      className={`w-full flex items-center justify-between gap-4 card px-4 py-3.5 text-left transition-all duration-200 active:scale-[0.98]
+        ${disabled ? "opacity-35 cursor-not-allowed" : "hover:bg-white/[0.06]"}`}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-white leading-tight">{label}</p>
+        <p className="text-[11px] text-white/38 mt-0.5 leading-snug">{description}</p>
+      </div>
+      <div className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${checked && !disabled ? "bg-brand" : "bg-white/10"}`}>
+        <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${checked && !disabled ? "translate-x-5" : "translate-x-0.5"}`} />
+      </div>
+    </button>
+  );
+}
+
 const THEMES = [
   { id: "classic",     emoji: "🌍", label: "Classic" },
   { id: "celebrities", emoji: "⭐", label: "Celebrities" },
@@ -212,11 +236,35 @@ export default function Setup() {
           </p>
         </motion.section>
 
-        {/* Temporizador */}
+        {/* Extras */}
         <motion.section
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.17, duration: 0.28 }}
+        >
+          <div className="section-title">Extras</div>
+          <div className="space-y-2">
+            <ToggleRow
+              label="Última Chance"
+              description="Se apanhado, o impostor tenta adivinhar a palavra"
+              checked={room.lastChance}
+              onChange={(v) => setRoom({ lastChance: v })}
+            />
+            <ToggleRow
+              label="Dois Impostores"
+              description={room.players.length < 5 ? "Precisas de pelo menos 5 jogadores" : "Dois jogadores são impostores"}
+              checked={room.twoImpostors}
+              onChange={(v) => setRoom({ twoImpostors: v })}
+              disabled={room.players.length < 5}
+            />
+          </div>
+        </motion.section>
+
+        {/* Temporizador */}
+        <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.20, duration: 0.28 }}
         >
           <div className="section-title">Temporizador</div>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">

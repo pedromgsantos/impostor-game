@@ -33,7 +33,7 @@ export default function Assign() {
   const order = round?.revealOrder ?? [];
   const actualIndex = order[idx] ?? idx;
   const currentName = players?.[actualIndex] ?? `Jogador ${actualIndex + 1}`;
-  const isImpostor = round?.impostorIndex === actualIndex;
+  const isImpostor = (round?.impostorIndices ?? []).includes(actualIndex);
 
   const revealText = useMemo(() => {
     const normal = mode === "normal";

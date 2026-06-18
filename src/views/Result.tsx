@@ -19,12 +19,7 @@ export default function Result() {
     if (!round || !players || players.length < 3) toPhase("setup");
   }, [round, players, toPhase]);
 
-  const impostorName = useMemo(() => {
-    if (!round || !players?.length) return "—";
-    return players[round.impostorIndex] ?? "—";
-  }, [players, round]);
-
-  const impostorIdx = round?.impostorIndex ?? 0;
+  const impostorIndices = round?.impostorIndices ?? [];
   const groupWon = round?.winner === "group";
 
   useEffect(() => {
@@ -94,9 +89,17 @@ export default function Result() {
         >
           {/* Impostor header */}
           <div className={`px-5 py-5 text-center border-b border-white/[0.07] ${groupWon ? "bg-emerald-500/[0.07]" : "bg-rose-500/[0.07]"}`}>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-white/35 mb-2">O impostor era</p>
-            <div className="text-4xl mb-1.5">{playerEmoji(impostorIdx)}</div>
-            <p className="text-2xl font-bold">{impostorName}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-white/35 mb-3">
+              {impostorIndices.length > 1 ? "Os impostores eram" : "O impostor era"}
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              {impostorIndices.map((idx) => (
+                <div key={idx} className="flex flex-col items-center gap-1">
+                  <div className="text-4xl">{playerEmoji(idx)}</div>
+                  <p className="text-lg font-bold">{players?.[idx] ?? `Jogador ${idx + 1}`}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Details */}

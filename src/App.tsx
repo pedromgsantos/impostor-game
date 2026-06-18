@@ -5,9 +5,10 @@ import Setup from "./views/Setup";
 import Assign from "./views/Assign";
 import Round from "./views/Round";
 import Vote from "./views/Vote";
+import LastChance from "./views/LastChance";
 import Result from "./views/Result";
 
-const PHASE_ORDER = ["setup", "assign", "round", "vote", "result"] as const;
+const PHASE_ORDER = ["setup", "assign", "round", "vote", "lastchance", "result"] as const;
 
 const variants = {
   initial: (dir: number) => ({ opacity: 0, x: dir * 28, scale: 0.99 }),
@@ -39,8 +40,9 @@ export default function App() {
         {phase === "setup"  && <Setup />}
         {phase === "assign" && <Assign />}
         {phase === "round"  && <Round />}
-        {phase === "vote"   && <Vote />}
-        {phase === "result" && <Result />}
+        {phase === "vote"       && <Vote />}
+        {phase === "lastchance" && <LastChance />}
+        {phase === "result"     && <Result />}
       </motion.div>
     </AnimatePresence>
   );

@@ -118,7 +118,8 @@ export default function Assign() {
     toPhase("round");
   };
 
-  const onTapHoldButtonDown = () => {
+  const onTapHoldButtonDown = (e: React.PointerEvent) => {
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     setIsHolding(true);
     holdTimerRef.current = -1;
     vibrate(8);
@@ -139,7 +140,7 @@ export default function Assign() {
       {/* Header com progress */}
       <header className="screen pt-4 text-center px-4">
         {/* Progress dots */}
-        <div className="flex items-center justify-center gap-1.5 mb-4">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
           {players?.map((_, i) => (
             <motion.div
               key={i}

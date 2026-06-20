@@ -85,7 +85,7 @@ export default function Setup() {
         </p>
       </motion.header>
 
-      <main className="screen flex-1 pb-32 pt-4 space-y-5 overflow-y-auto">
+      <main className="screen flex-1 min-h-0 pb-32 pt-4 space-y-5 overflow-y-auto scrollbar-none">
 
         {/* Jogadores */}
         <motion.section

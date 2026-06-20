@@ -212,7 +212,7 @@ export const useGameStore = create<GameState>()(
     {
       name: "impostor-game-store",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ ui: s.ui, room: s.room }),
+      partialize: (s) => ({ ui: s.ui, room: s.room, round: s.round }),
     }
   )
 );

@@ -6,11 +6,12 @@ A mobile-first social deduction party game. One player secretly receives a diffe
 
 ## How to Play
 
-1. **Setup**: Add players (minimum 3), pick a game mode, theme, and optional timer.
+1. **Setup**: Add players (minimum 3), pick a game mode, theme, optional twists, and optional timer.
 2. **Assign**: Each player privately sees their word by holding the reveal button or dragging the card up. Nobody else should look.
 3. **Round**: Players take turns giving clues. The timer (if set) counts down. The first player to speak is shown at the start.
 4. **Vote**: The group votes on who they think is the impostor.
-5. **Result**: The game reveals whether the group caught the impostor or not, plus the real word and the impostor word (Normal mode only).
+5. **Last Chance** (optional twist): If enabled and the impostor is caught, the impostor gets one final shot to guess the real word and steal the win.
+6. **Result**: The game reveals whether the group caught the impostor or not, plus the real word and the impostor word (Normal mode only).
 
 ## Game Modes
 
@@ -18,6 +19,15 @@ A mobile-first social deduction party game. One player secretly receives a diffe
 |------|-------------|
 | **Normal** | The impostor receives a related but different word from the group. |
 | **Cego (Blind)** | The impostor sees no word at all and must bluff from scratch. The impostor never speaks first. |
+
+### Optional Twists
+
+These can be toggled on at Setup and combined with either mode:
+
+| Twist | Description |
+|-------|-------------|
+| **Última Chance (Last Chance)** | When the impostor is caught, they get one final guess at the real word. Guess it right and the impostor wins anyway. |
+| **Dois Impostores (Two Impostors)** | Requires at least 5 players. Two players become impostors instead of one, and the group only wins if **both** are caught. |
 
 ## Themes
 
@@ -88,10 +98,12 @@ src/
 │   ├── Assign.tsx           # Secret role reveal (drag/hold mechanic)
 │   ├── Round.tsx            # Discussion timer and first-speaker indicator
 │   ├── Vote.tsx             # Suspect selection and confirmation modal
+│   ├── LastChance.tsx       # Impostor's final word guess (Última Chance twist)
 │   └── Result.tsx           # Winner reveal and round summary
 ├── services/
 │   └── wordManager.ts       # Theme loading and word-history tracking (IndexedDB)
 └── utils/
+    ├── playerEmoji.ts       # Maps a player index to an avatar emoji
     └── slugifyCard.ts       # Maps a word to its card image filename (Royale theme)
 
 public/

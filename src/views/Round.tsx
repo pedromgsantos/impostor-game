@@ -212,7 +212,7 @@ export default function Round() {
             whileTap={{ scale: 0.97 }}
             onClick={() => toPhase("vote")}
           >
-            Votar 🗳️
+            Votar
           </motion.button>
         </div>
       </div>

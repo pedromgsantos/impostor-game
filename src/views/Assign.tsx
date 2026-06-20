@@ -324,7 +324,7 @@ export default function Assign() {
             disabled={!hasRevealed}
             onClick={onContinue}
           >
-            {idx < (players?.length ?? 0) - 1 ? "Continuar →" : "Começar ronda 🎮"}
+            {idx < (players?.length ?? 0) - 1 ? "Continuar →" : "Começar ronda"}
           </button>
           <p className="mt-2 text-center text-[11px] opacity-35">
             Nada fica visível quando largas o ecrã.

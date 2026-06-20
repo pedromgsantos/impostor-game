@@ -134,7 +134,7 @@ export default function Result() {
           style={{ boxShadow: groupWon ? "0 6px 24px rgba(16,185,129,0.40)" : "0 6px 24px rgba(239,68,68,0.40)" }}
           onClick={startGame}
         >
-          🔄  Jogar novamente
+          Jogar novamente
         </button>
         <div className="flex gap-2">
           <button

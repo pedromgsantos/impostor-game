@@ -308,7 +308,7 @@ export default function Setup() {
             disabled={!canPlay}
             onClick={startGame}
           >
-            {canPlay ? "🎮  Vamos jogar!" : "Adiciona pelo menos 3 jogadores"}
+            {canPlay ? "Começar jogo" : "Adiciona pelo menos 3 jogadores"}
           </motion.button>
         </div>
       </div>

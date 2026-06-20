@@ -70,7 +70,7 @@ export default function Vote() {
         )}
       </header>
 
-      <main className="screen flex-1 px-4 py-4 pb-28">
+      <main className="screen flex-1 min-h-0 overflow-y-auto scrollbar-none px-4 py-4 pb-28">
         <div role="radiogroup" aria-label="Lista de suspeitos" className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {players?.map((name, i) => {
             const isSelected = selected === i;

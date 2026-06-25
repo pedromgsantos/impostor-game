@@ -34,11 +34,15 @@ These can be toggled on at Setup and combined with either mode:
 | Theme | Type | Notes |
 |-------|------|-------|
 | **Classic** | Word pairs | Impostor gets a related alternate word |
-| **Celebrities** | Single list | Impostor gets a random different word |
-| **Food** | Single list | Impostor gets a random different word |
+| **Celebrities** | Word pairs | Each pair is a celebrity + an associated clue |
+| **Food** | Word pairs | Each pair is a food + a pop-culture association |
 | **Royale Heheheha** | Single list | Forces Blind mode; shows card images for group players |
 
-The game tracks which words have been used per theme (stored in IndexedDB) and avoids repeating them until the pool is exhausted. Players can reset a theme's history from the Result screen.
+Each theme (except Royale, which is English/universal) has a Portuguese file
+(`<theme>.json`) and an English file (`<theme>.en.json`); the one matching the
+active language is loaded at game start.
+
+The game tracks which words have been used per theme **and language** (stored in IndexedDB) and avoids repeating them until the pool is exhausted. Players can reset a theme's history from the Result screen.
 
 ## Tech Stack
 
@@ -136,15 +140,21 @@ src/
 
 public/
 └── data/
-    ├── classic.json         # Word pairs: [[real, impostor], ...]
-    ├── celebrities.json     # Single word list: ["word", ...]
-    ├── food.json            # Single word list
-    └── royale.json          # Single word list (Blind mode, with card images)
+    ├── classic.json         # PT word pairs: { type: "pairs", items: [[real, impostor], ...] }
+    ├── classic.en.json      # EN word pairs
+    ├── celebrities.json     # PT word pairs
+    ├── celebrities.en.json  # EN word pairs
+    ├── food.json            # PT word pairs
+    ├── food.en.json         # EN word pairs
+    └── royale.json          # Single word list (Blind mode, with card images; language-agnostic)
 ```
 
 ## Adding a New Theme
 
-1. Create `public/data/<theme>.json`:
+1. Create the Portuguese file `public/data/<theme>.json` and the English file
+   `public/data/<theme>.en.json` (skip the `.en` file only for a
+   language-agnostic theme — add its id to `LANG_AGNOSTIC_THEMES` in
+   `src/services/wordManager.ts`). Each file is either:
    - **Word pairs** (Normal mode): `{ "type": "pairs", "items": [["beach", "pool"], ...] }`
    - **Single list** (Blind/Normal): `["pizza", "sushi", ...]`
 2. Add an entry to the `THEMES` array in `src/views/Setup.tsx`, and add a

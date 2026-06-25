@@ -16,6 +16,7 @@ export default function Result() {
   const startGame = useGameStore((s) => s.startGame);
   const reset     = useGameStore((s) => s.reset);
   const showToast = useGameStore((s) => s.showToast);
+  const lang      = useGameStore((s) => s.lang);
   const t         = useT();
 
   const [confirmReset, setConfirmReset] = useState(false);
@@ -53,7 +54,7 @@ export default function Result() {
   const onConfirmReset = async () => {
     if (!theme) return;
     setConfirmReset(false);
-    await resetTheme(theme);
+    await resetTheme(theme, lang);
     showToast(t("result.resetDone"), "success");
   };
 

@@ -73,6 +73,15 @@ describe("startGame", () => {
     expect(round?.impostorIndices).toHaveLength(1);
     expect(round?.realWord).toBe("praia");
     expect(round?.impostorWord).toBe("piscina");
+    // The active language is threaded through to the word source.
+    expect(getNextWords).toHaveBeenCalledWith("classic", "normal", "pt");
+  });
+
+  it("passes the active language to getNextWords", async () => {
+    resetStore({ room: { ...useGameStore.getState().room, players: ["A", "B", "C"] }, lang: "en" });
+    useGameStore.getState().startGame();
+    await flush();
+    expect(getNextWords).toHaveBeenCalledWith("classic", "normal", "en");
   });
 
   it("assigns two distinct impostors when twoImpostors is on and players >= 5", async () => {

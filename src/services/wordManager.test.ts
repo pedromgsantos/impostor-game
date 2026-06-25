@@ -82,6 +82,37 @@ describe("getNextWords — single-list theme", () => {
   });
 });
 
+describe("getNextWords — language selection", () => {
+  it("loads the .en.json file for English and the base file for Portuguese", async () => {
+    themeData["loc"] = { type: "pairs", items: [["praia", "piscina"]] };
+    themeData["loc.en"] = { type: "pairs", items: [["beach", "pool"]] };
+
+    const pt = await getNextWords("loc", "normal", "pt");
+    const en = await getNextWords("loc", "normal", "en");
+
+    expect(pt.real).toBe("praia");
+    expect(en.real).toBe("beach");
+  });
+
+  it("keeps separate history per language so they do not exhaust each other", async () => {
+    themeData["sep"] = { type: "pairs", items: [["a", "b"]] };
+    themeData["sep.en"] = { type: "pairs", items: [["x", "y"]] };
+
+    // Exhaust the PT deck only.
+    await getNextWords("sep", "normal", "pt");
+    expect((await getNextWords("sep", "normal", "pt")).exhausted).toBe(true);
+
+    // EN deck is still fresh.
+    expect((await getNextWords("sep", "normal", "en")).exhausted).toBe(false);
+  });
+
+  it("ignores language for royale (always the base file)", async () => {
+    themeData["royale"] = ["mega knight", "hog rider", "log"];
+    const en = await getNextWords("royale", "cego", "en");
+    expect(["mega knight", "hog rider", "log"]).toContain(en.real);
+  });
+});
+
 describe("resetTheme", () => {
   it("clears history so words become available again", async () => {
     themeData["pairs-reset"] = { type: "pairs", items: [["praia", "piscina"]] };

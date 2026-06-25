@@ -115,7 +115,8 @@ export const useGameStore = create<GameState>()(
 
             const { real, impostor, exhausted } = await getNextWords(
               room.theme,
-              effectiveMode
+              effectiveMode,
+              get().lang
             );
 
             const impostorCount = room.twoImpostors && n >= 5 ? 2 : 1;

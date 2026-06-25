@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useGameStore } from "./store/game";
 import Toast from "./components/Toast";
@@ -19,7 +19,12 @@ const variants = {
 
 export default function App() {
   const phase   = useGameStore((s) => s.ui.phase);
+  const lang    = useGameStore((s) => s.lang);
   const prevRef = useRef(phase);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const prevIdx  = PHASE_ORDER.indexOf(prevRef.current);
   const phaseIdx = PHASE_ORDER.indexOf(phase);

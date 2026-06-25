@@ -2,7 +2,7 @@
 
 A mobile-first social deduction party game. One player secretly receives a different word from everyone else and must blend in without being caught.
 
-> The UI is in **Portuguese (PT)**.
+> The UI ships in **Portuguese (PT)** and **English (EN)** — switch languages from the toggle in the top-right of the Setup screen. The choice is remembered across sessions.
 
 ## How to Play
 
@@ -52,9 +52,11 @@ The game tracks which words have been used per theme (stored in IndexedDB) and a
 | Zustand | 5 |
 | idb-keyval | 6 |
 | vite-plugin-pwa | 1 |
+| Vitest | 3 |
 
 ## Features
 
+- **Bilingual (PT/EN)**: in-app language toggle backed by a typed translation table; the active language persists and sets `<html lang>`.
 - **PWA**: installable on mobile and desktop, works offline after the first load.
 - **No backend**: fully client-side. No accounts, no server, no data leaves the device.
 - **Word history**: IndexedDB prevents word repetition across rounds until the theme pool is exhausted.
@@ -84,7 +86,28 @@ npm run preview
 
 # Lint
 npm run lint
+
+# Run the test suite once
+npm test
+
+# Run tests in watch mode
+npm run test:watch
 ```
+
+## Testing
+
+Unit tests run on [Vitest](https://vitest.dev) (jsdom environment) and cover the
+game's pure logic — no component rendering required:
+
+- `src/store/game.test.ts` — round setup, the single- and two-impostor voting
+  flows, Last Chance resolution (case/accent-insensitive), and the exhausted-pool
+  toast. `getNextWords` is mocked so outcomes are deterministic.
+- `src/services/wordManager.test.ts` — no-repeat word selection for pairs and
+  single-list themes, blind vs. normal mode, history reset, and missing-file
+  errors. `idb-keyval` is replaced with an in-memory map and `fetch` is stubbed.
+- `src/i18n/translations.test.ts` — guarantees the PT and EN tables define the
+  exact same keys and that interpolation works.
+- `src/utils/*.test.ts` — `slugifyCard` and `playerEmoji` helpers.
 
 ## Project Structure
 
@@ -93,8 +116,11 @@ src/
 ├── App.tsx                  # Phase router with animated transitions
 ├── store/
 │   └── game.ts              # Zustand store, all game state and actions
+├── i18n/
+│   ├── translations.ts      # PT/EN tables + framework-agnostic `translate()`
+│   └── index.ts             # `useT()` React hook bound to the active language
 ├── views/
-│   ├── Setup.tsx            # Player list, mode, theme, timer configuration
+│   ├── Setup.tsx            # Player list, mode, theme, timer, language toggle
 │   ├── Assign.tsx           # Secret role reveal (drag/hold mechanic)
 │   ├── Round.tsx            # Discussion timer and first-speaker indicator
 │   ├── Vote.tsx             # Suspect selection and confirmation modal
@@ -102,6 +128,8 @@ src/
 │   └── Result.tsx           # Winner reveal and round summary
 ├── services/
 │   └── wordManager.ts       # Theme loading and word-history tracking (IndexedDB)
+├── test/
+│   └── setup.ts             # Vitest setup (localStorage shim for jsdom)
 └── utils/
     ├── playerEmoji.ts       # Maps a player index to an avatar emoji
     └── slugifyCard.ts       # Maps a word to its card image filename (Royale theme)
@@ -119,7 +147,9 @@ public/
 1. Create `public/data/<theme>.json`:
    - **Word pairs** (Normal mode): `{ "type": "pairs", "items": [["beach", "pool"], ...] }`
    - **Single list** (Blind/Normal): `["pizza", "sushi", ...]`
-2. Add an `<option>` to the theme `<select>` in `src/views/Setup.tsx`.
+2. Add an entry to the `THEMES` array in `src/views/Setup.tsx`, and add a
+   `setup.theme.<id>` label to both the `pt` and `en` tables in
+   `src/i18n/translations.ts`.
 3. If the theme must force Blind mode, handle it in `src/store/game.ts` where `effectiveMode` is derived (currently only `"royale"` forces Blind).
 4. To show card images, place PNGs in `public/cards/` using the filename format produced by `slugifyCard.ts`.
 

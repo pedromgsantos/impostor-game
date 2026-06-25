@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useGameStore } from "@/store/game";
+import { useT } from "@/i18n";
 import { resetTheme } from "@/services/wordManager";
 import { playerEmoji } from "@/utils/playerEmoji";
 
@@ -15,6 +16,7 @@ export default function Result() {
   const startGame = useGameStore((s) => s.startGame);
   const reset     = useGameStore((s) => s.reset);
   const showToast = useGameStore((s) => s.showToast);
+  const t         = useT();
 
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -52,7 +54,7 @@ export default function Result() {
     if (!theme) return;
     setConfirmReset(false);
     await resetTheme(theme);
-    showToast("Histórico reposto com sucesso.", "success");
+    showToast(t("result.resetDone"), "success");
   };
 
   return (
@@ -68,7 +70,7 @@ export default function Result() {
         >
           <div className="text-8xl mb-4">{groupWon ? "🎉" : "😈"}</div>
           <h1 className={`text-4xl font-bold tracking-tight ${groupWon ? "text-emerald-400" : "text-rose-400"}`}>
-            {groupWon ? "Grupo venceu!" : "Impostor venceu!"}
+            {groupWon ? t("result.groupWon") : t("result.impostorWon")}
           </h1>
           <motion.p
             initial={{ opacity: 0, y: 6 }}
@@ -77,8 +79,8 @@ export default function Result() {
             className="mt-2 text-sm text-white/40 max-w-xs mx-auto"
           >
             {groupWon
-              ? "Encontraram o impostor! Bom trabalho de equipa. 🔍"
-              : "O impostor enganou toda a gente. Boa sorte da próxima!"}
+              ? t("result.groupWonDesc")
+              : t("result.impostorWonDesc")}
           </motion.p>
         </motion.div>
 
@@ -92,13 +94,13 @@ export default function Result() {
           {/* Impostor header */}
           <div className={`px-5 py-5 text-center border-b border-white/[0.07] ${groupWon ? "bg-emerald-500/[0.07]" : "bg-rose-500/[0.07]"}`}>
             <p className="text-[10px] uppercase tracking-[0.12em] text-white/35 mb-3">
-              {impostorIndices.length > 1 ? "Os impostores eram" : "O impostor era"}
+              {impostorIndices.length > 1 ? t("result.impostorsWere") : t("result.impostorWas")}
             </p>
             <div className="flex items-center justify-center gap-4">
               {impostorIndices.map((idx) => (
                 <div key={idx} className="flex flex-col items-center gap-1">
                   <div className="text-4xl">{playerEmoji(idx)}</div>
-                  <p className="text-lg font-bold">{players?.[idx] ?? `Jogador ${idx + 1}`}</p>
+                  <p className="text-lg font-bold">{players?.[idx] ?? t("common.playerFallback", { n: idx + 1 })}</p>
                 </div>
               ))}
             </div>
@@ -107,15 +109,15 @@ export default function Result() {
           {/* Details */}
           <div className="px-5 py-4 space-y-3.5">
             <div className="flex items-start justify-between gap-3">
-              <span className="text-sm text-white/40 shrink-0">Palavra real</span>
+              <span className="text-sm text-white/40 shrink-0">{t("result.realWord")}</span>
               <span className="text-sm font-semibold text-right">{round?.realWord ?? "—"}</span>
             </div>
             <div className="flex items-start justify-between gap-3">
               <span className="text-sm text-white/40 shrink-0">
-                {mode === "normal" ? "Pista do impostor" : "Modo cego"}
+                {mode === "normal" ? t("result.impostorClue") : t("result.blindMode")}
               </span>
               <span className="text-sm font-semibold text-right">
-                {mode === "normal" ? (round?.impostorWord ?? "—") : "Impostor jogou no escuro"}
+                {mode === "normal" ? (round?.impostorWord ?? "—") : t("result.playedBlind")}
               </span>
             </div>
           </div>
@@ -134,20 +136,20 @@ export default function Result() {
           style={{ boxShadow: groupWon ? "0 6px 24px rgba(16,185,129,0.40)" : "0 6px 24px rgba(239,68,68,0.40)" }}
           onClick={startGame}
         >
-          Jogar novamente
+          {t("result.playAgain")}
         </button>
         <div className="flex gap-2">
           <button
             className="flex-1 py-3 rounded-2xl font-semibold border border-white/[0.09] bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.97] transition text-sm"
             onClick={reset}
           >
-            Nova sala
+            {t("result.newRoom")}
           </button>
           <button
             className="flex-1 py-3 rounded-2xl font-semibold border border-white/[0.09] bg-white/[0.05] hover:bg-white/[0.09] active:scale-[0.97] transition text-sm text-white/50"
             onClick={() => setConfirmReset(true)}
           >
-            Repor histórico
+            {t("result.resetHistory")}
           </button>
         </div>
       </motion.footer>
@@ -170,9 +172,9 @@ export default function Result() {
             >
               <div className="text-center mb-5">
                 <div className="text-3xl mb-2">🗑️</div>
-                <h2 className="text-base font-bold">Repor histórico</h2>
+                <h2 className="text-base font-bold">{t("result.resetTitle")}</h2>
                 <p className="text-sm text-white/45 mt-1">
-                  As palavras já usadas no tema <span className="text-white/70 font-medium">"{theme}"</span> voltam a estar disponíveis.
+                  {t("result.resetQuestion", { theme })}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -180,13 +182,13 @@ export default function Result() {
                   className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-semibold transition"
                   onClick={() => setConfirmReset(false)}
                 >
-                  Cancelar
+                  {t("common.cancel")}
                 </button>
                 <button
                   className="flex-1 py-3 rounded-xl bg-brand hover:bg-brand-600 font-bold text-sm transition shadow-[0_4px_16px_rgba(239,68,68,0.35)]"
                   onClick={onConfirmReset}
                 >
-                  Repor
+                  {t("result.reset")}
                 </button>
               </div>
             </motion.div>

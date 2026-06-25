@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { useT } from "@/i18n";
 import { playerEmoji } from "@/utils/playerEmoji";
 
 export default function Vote() {
@@ -10,6 +11,7 @@ export default function Vote() {
   const players     = useGameStore((s) => s.room.players);
   const round       = useGameStore((s) => s.round);
   const voteSuspect = useGameStore((s) => s.voteSuspect);
+  const t           = useT();
 
   const [selected, setSelected]       = useState<number | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -48,10 +50,10 @@ export default function Vote() {
           {isSecondVote ? "🎯" : "🗳️"}
         </motion.div>
         <h1 className="text-2xl font-bold tracking-tight">
-          {isSecondVote ? "Segundo voto" : "Votação"}
+          {isSecondVote ? t("vote.secondTitle") : t("vote.title")}
         </h1>
         <p className="mt-1 text-sm text-white/40">
-          {isSecondVote ? "Encontra o segundo impostor!" : "Quem é o impostor?"}
+          {isSecondVote ? t("vote.secondSubtitle") : t("vote.subtitle")}
         </p>
 
         {/* Banner "primeiro impostor apanhado" */}
@@ -64,14 +66,14 @@ export default function Vote() {
           >
             <span>✓</span>
             <span>
-              {players?.[caughtIndices[0]] ?? "Jogador"} apanhado — falta um!
+              {t("vote.caughtBanner", { name: players?.[caughtIndices[0]] ?? t("common.playerFallback", { n: caughtIndices[0] + 1 }) })}
             </span>
           </motion.div>
         )}
       </header>
 
       <main className="screen flex-1 min-h-0 overflow-y-auto scrollbar-none px-4 py-4 pb-28">
-        <div role="radiogroup" aria-label="Lista de suspeitos" className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+        <div role="radiogroup" aria-label={t("vote.suspectsAria")} className="grid grid-cols-2 gap-3 max-w-md mx-auto">
           {players?.map((name, i) => {
             const isSelected = selected === i;
             const isCaught   = caughtIndices.includes(i);
@@ -87,7 +89,7 @@ export default function Vote() {
                     {name}
                   </span>
                   <span className="text-[10px] px-2.5 py-0.5 rounded-full border border-emerald-400/40 bg-emerald-400/15 text-emerald-300 font-semibold">
-                    Apanhado ✓
+                    {t("vote.caught")}
                   </span>
                 </div>
               );
@@ -127,7 +129,7 @@ export default function Vote() {
                       transition={{ duration: 0.2 }}
                       className="text-[10px] px-2.5 py-0.5 rounded-full border border-brand/50 bg-brand/15 text-brand font-semibold"
                     >
-                      Selecionado
+                      {t("vote.selected")}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -156,7 +158,7 @@ export default function Vote() {
             disabled={!canConfirm}
             onClick={() => setConfirmOpen(true)}
           >
-            {canConfirm ? "⚖️  Confirmar suspeito" : "Seleciona um suspeito"}
+            {canConfirm ? t("vote.confirm") : t("vote.selectSuspect")}
           </motion.button>
         </div>
       </div>
@@ -189,7 +191,7 @@ export default function Vote() {
                   {selected !== null ? players?.[selected] : "—"}
                 </h2>
                 <p className="text-sm text-white/50 mt-1">
-                  Têm a certeza que querem acusar esta pessoa?
+                  {t("vote.confirmQuestion")}
                 </p>
               </div>
 
@@ -198,13 +200,13 @@ export default function Vote() {
                   className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-semibold transition"
                   onClick={() => setConfirmOpen(false)}
                 >
-                  Cancelar
+                  {t("common.cancel")}
                 </button>
                 <button
                   className="flex-1 py-3 rounded-xl bg-brand hover:bg-brand-600 font-bold text-sm transition shadow-[0_4px_16px_rgba(239,68,68,0.35)]"
                   onClick={onConfirm}
                 >
-                  Acusar 🔍
+                  {t("vote.accuse")}
                 </button>
               </div>
             </motion.div>
@@ -229,7 +231,7 @@ export default function Vote() {
               >
                 🔍
               </motion.div>
-              <p className="text-sm text-white/50 mb-4">A revelar...</p>
+              <p className="text-sm text-white/50 mb-4">{t("vote.revealing")}</p>
               <div className="flex items-center justify-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
                 <div className="w-2 h-2 rounded-full bg-brand/60 animate-pulse [animation-delay:130ms]" />

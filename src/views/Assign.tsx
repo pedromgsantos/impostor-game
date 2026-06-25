@@ -3,6 +3,7 @@ import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { useT } from "@/i18n";
 import { slugifyCard } from "@/utils/slugifyCard";
 import { playerEmoji } from "@/utils/playerEmoji";
 
@@ -13,6 +14,7 @@ export default function Assign() {
   const theme   = useGameStore((s) => s.room.theme);
   const toPhase = useGameStore((s) => s.toPhase);
   const round   = useGameStore((s) => s.round);
+  const t       = useT();
 
   const [idx, setIdx]                 = useState(0);
   const [hasRevealed, setHasRevealed] = useState(false);
@@ -32,22 +34,22 @@ export default function Assign() {
 
   const order = round?.revealOrder ?? [];
   const actualIndex = order[idx] ?? idx;
-  const currentName = players?.[actualIndex] ?? `Jogador ${actualIndex + 1}`;
+  const currentName = players?.[actualIndex] ?? t("common.playerFallback", { n: actualIndex + 1 });
   const isImpostor = (round?.impostorIndices ?? []).includes(actualIndex);
 
   const revealText = useMemo(() => {
     const normal = mode === "normal";
     if (isImpostor) {
-      if (normal) return round?.impostorWord ?? "IMPOSTOR";
-      return "Boa sorte 😈";
+      if (normal) return round?.impostorWord ?? t("assign.wordFallback");
+      return `${t("assign.goodLuck")} 😈`;
     }
-    return round?.realWord ?? "PALAVRA";
-  }, [isImpostor, mode, round?.impostorWord, round?.realWord]);
+    return round?.realWord ?? t("assign.wordFallback");
+  }, [isImpostor, mode, round?.impostorWord, round?.realWord, t]);
 
   const subtitle = useMemo(() => {
-    if (isImpostor) return mode === "normal" ? "És o impostor" : "Jogas no escuro";
-    return "És do grupo";
-  }, [isImpostor, mode]);
+    if (isImpostor) return mode === "normal" ? t("assign.roleImpostor") : t("assign.roleBlind");
+    return t("assign.roleGroup");
+  }, [isImpostor, mode, t]);
 
   const cardImageSrc = useMemo(() => {
     if (!isClashTheme || isImpostor || !revealText) return null;
@@ -164,7 +166,7 @@ export default function Assign() {
           <span className="text-xl leading-none">{playerEmoji(actualIndex)}</span>
           <span className="font-semibold text-[15px]">{currentName}</span>
           <span className="text-white/30 text-xs">·</span>
-          <span className="text-white/45 text-xs">{idx + 1} de {total}</span>
+          <span className="text-white/45 text-xs">{t("assign.counter", { n: idx + 1, total })}</span>
         </motion.div>
       </header>
 
@@ -176,7 +178,7 @@ export default function Assign() {
           <div
             ref={surfaceRef}
             role="button"
-            aria-label="Arrasta para cima e mantém para ver o teu papel"
+            aria-label={t("assign.surfaceAria")}
             aria-live="polite"
             className="relative w-full h-[min(54vh,500px)] rounded-2xl bg-[#18131f]/95 border border-white/[0.12] shadow-[0_24px_60px_-8px_rgba(0,0,0,0.70)] overflow-hidden touch-none"
             onPointerDown={onPointerDown}
@@ -201,7 +203,7 @@ export default function Assign() {
               >
                 <div className="text-center space-y-3 mt-16">
                   <p className="text-[13px] opacity-60">
-                    Só <span className="font-semibold text-white/90">{currentName}</span> deve ver
+                    {t("assign.onlySees", { name: currentName })}
                   </p>
                   <div className="flex flex-col items-center gap-1.5 mt-2">
                     <motion.div
@@ -211,7 +213,7 @@ export default function Assign() {
                     >
                       ☝️
                     </motion.div>
-                    <p className="text-xs text-white/40">Arrasta para cima e mantém</p>
+                    <p className="text-xs text-white/40">{t("assign.dragUp")}</p>
                   </div>
                 </div>
               </motion.div>
@@ -238,7 +240,7 @@ export default function Assign() {
                     {/* Header */}
                     <div className="px-6 pt-7 pb-4 text-center">
                       <div className="text-5xl mb-3">{playerEmoji(actualIndex)}</div>
-                      <p className="text-[10px] uppercase tracking-[0.15em] opacity-60">Para</p>
+                      <p className="text-[10px] uppercase tracking-[0.15em] opacity-60">{t("assign.to")}</p>
                       <p className="font-bold text-lg mt-0.5">{currentName}</p>
                     </div>
 
@@ -250,7 +252,7 @@ export default function Assign() {
                       {isClashTheme && isImpostor ? (
                         <div className="flex flex-col items-center gap-2">
                           <span className="text-5xl">😈</span>
-                          <p className="text-[clamp(24px,7vw,36px)] font-black">Boa sorte</p>
+                          <p className="text-[clamp(24px,7vw,36px)] font-black">{t("assign.goodLuck")}</p>
                         </div>
                       ) : (
                         <>
@@ -295,7 +297,7 @@ export default function Assign() {
             {/* Aviso anti-batota */}
             <div className="absolute bottom-0 inset-x-0 p-4 flex items-center justify-center">
               <p className="text-[11px] text-center opacity-50">
-                ⚠️ Jogo justo — sem espreitar nem screenshots
+                {t("assign.fairPlay")}
               </p>
             </div>
           </div>
@@ -305,12 +307,12 @@ export default function Assign() {
         <div className="mt-4 mb-4 flex items-center justify-center">
           <button
             className="px-5 py-2.5 rounded-2xl border border-white/15 bg-white/8 hover:bg-white/12 active:scale-[0.97] transition text-sm text-white/70"
-            aria-label="Tocar e manter para ver o teu papel"
+            aria-label={t("assign.holdButtonAria")}
             onPointerDown={onTapHoldButtonDown}
             onPointerUp={onTapHoldButtonUp}
             onPointerCancel={onTapHoldButtonUp}
           >
-            👆 Tocar &amp; Manter
+            {t("assign.holdButton")}
           </button>
         </div>
 
@@ -325,10 +327,10 @@ export default function Assign() {
             disabled={!hasRevealed}
             onClick={onContinue}
           >
-            {idx < (players?.length ?? 0) - 1 ? "Continuar →" : "Começar ronda"}
+            {idx < (players?.length ?? 0) - 1 ? t("assign.continue") : t("assign.startRound")}
           </button>
           <p className="mt-2 text-center text-[11px] opacity-35">
-            Nada fica visível quando largas o ecrã.
+            {t("assign.hiddenOnRelease")}
           </p>
         </div>
       </div>

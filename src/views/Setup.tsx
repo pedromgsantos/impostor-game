@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { useT } from "@/i18n";
 import { playerEmoji } from "@/utils/playerEmoji";
+import type { Lang } from "@/i18n";
 
 const TIMER_STEPS = [0, 30, 60, 90, 120, 150, 180, 210, 240] as const;
 
@@ -30,11 +32,16 @@ function ToggleRow({
 }
 
 const THEMES = [
-  { id: "classic",     emoji: "🌍", label: "Classic" },
-  { id: "celebrities", emoji: "⭐", label: "Celebrities" },
-  { id: "food",        emoji: "🍕", label: "Food" },
-  { id: "royale",      emoji: "👑", label: "Royale" },
+  { id: "classic",     emoji: "🌍" },
+  { id: "celebrities", emoji: "⭐" },
+  { id: "food",        emoji: "🍕" },
+  { id: "royale",      emoji: "👑" },
 ] as const;
+
+const LANGS: { id: Lang; flag: string; label: string }[] = [
+  { id: "pt", flag: "🇵🇹", label: "PT" },
+  { id: "en", flag: "🇬🇧", label: "EN" },
+];
 
 function labelTime(s: number) {
   if (s === 0) return "∞";
@@ -47,6 +54,9 @@ export default function Setup() {
   const room      = useGameStore((s) => s.room);
   const setRoom   = useGameStore((s) => s.setRoom);
   const startGame = useGameStore((s) => s.startGame);
+  const lang      = useGameStore((s) => s.lang);
+  const setLang   = useGameStore((s) => s.setLang);
+  const t         = useT();
 
   const isRoyale = room.theme === "royale";
 
@@ -56,7 +66,7 @@ export default function Setup() {
   );
 
   const onAddPlayer = () => {
-    setRoom({ players: [...room.players, `Jogador ${room.players.length + 1}`] });
+    setRoom({ players: [...room.players, t("common.playerFallback", { n: room.players.length + 1 })] });
   };
 
   const onRemove = (i: number) => {
@@ -67,11 +77,28 @@ export default function Setup() {
     <div className="app-container">
       {/* Header */}
       <motion.header
-        className="screen pt-6 pb-2 text-center"
+        className="screen pt-6 pb-2 text-center relative"
         initial={{ opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.32, ease: "easeOut" }}
       >
+        <div className="absolute right-0 top-6 flex items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.04] p-0.5" aria-label={t("setup.language")}>
+          {LANGS.map((l) => {
+            const active = lang === l.id;
+            return (
+              <button
+                key={l.id}
+                onClick={() => setLang(l.id)}
+                aria-pressed={active}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors duration-200
+                  ${active ? "bg-brand text-white" : "text-white/40 hover:text-white/70"}`}
+              >
+                <span className="text-sm leading-none">{l.flag}</span>
+                {l.label}
+              </button>
+            );
+          })}
+        </div>
         <motion.div
           className="text-5xl mb-3 inline-block"
           animate={{ rotate: [0, -8, 8, -4, 0] }}
@@ -81,7 +108,7 @@ export default function Setup() {
         </motion.div>
         <h1 className="app-title">Impostor Game</h1>
         <p className="mt-1.5 text-sm text-white/40">
-          Descobre o impostor entre os teus amigos
+          {t("app.tagline")}
         </p>
       </motion.header>
 
@@ -95,7 +122,7 @@ export default function Setup() {
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="section-title mb-0">Jogadores</span>
+              <span className="section-title mb-0">{t("setup.players")}</span>
               {room.players.length > 0 && (
                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-brand/20 text-brand text-[10px] font-bold">
                   {room.players.length}
@@ -107,7 +134,7 @@ export default function Setup() {
                 className="text-[11px] text-white/30 hover:text-rose-400 transition-colors"
                 onClick={() => setRoom({ players: [] })}
               >
-                Limpar
+                {t("setup.clear")}
               </button>
             )}
           </div>
@@ -130,7 +157,7 @@ export default function Setup() {
                     value={p}
                     inputMode="text"
                     autoComplete="off"
-                    placeholder={`Jogador ${i + 1}`}
+                    placeholder={t("setup.playerPlaceholder", { n: i + 1 })}
                     onChange={(e) => {
                       const arr = [...room.players];
                       arr[i] = e.target.value;
@@ -139,7 +166,7 @@ export default function Setup() {
                   />
                   <button
                     className="shrink-0 w-7 h-7 rounded-lg bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 text-white/35 transition-all duration-150 text-xs flex items-center justify-center"
-                    aria-label={`Remover jogador ${i + 1}`}
+                    aria-label={t("setup.removePlayer", { n: i + 1 })}
                     onClick={() => onRemove(i)}
                   >
                     ✕
@@ -152,7 +179,7 @@ export default function Setup() {
               className="w-full py-3 rounded-2xl border border-dashed border-white/12 hover:border-brand/30 text-white/35 hover:text-white/65 text-sm font-medium transition-all duration-200 hover:bg-white/[0.03]"
               onClick={onAddPlayer}
             >
-              + Adicionar jogador
+              {t("setup.addPlayer")}
             </button>
           </div>
         </motion.section>
@@ -163,18 +190,18 @@ export default function Setup() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.11, duration: 0.28 }}
         >
-          <div className="section-title">Tema</div>
+          <div className="section-title">{t("setup.theme")}</div>
           <div className="grid grid-cols-2 gap-2.5">
-            {THEMES.map((t) => {
-              const active = room.theme === t.id;
+            {THEMES.map((theme) => {
+              const active = room.theme === theme.id;
               return (
                 <button
-                  key={t.id}
+                  key={theme.id}
                   onClick={() =>
                     setRoom(
-                      t.id === "royale"
+                      theme.id === "royale"
                         ? { theme: "royale", mode: "cego" }
-                        : { theme: t.id }
+                        : { theme: theme.id }
                     )
                   }
                   className={`relative flex flex-col items-center gap-2 rounded-2xl border py-4 transition-all duration-200 active:scale-[0.96]
@@ -183,9 +210,9 @@ export default function Setup() {
                       : "border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.07]"
                     }`}
                 >
-                  <span className="text-3xl leading-none">{t.emoji}</span>
+                  <span className="text-3xl leading-none">{theme.emoji}</span>
                   <span className={`text-[13px] font-semibold ${active ? "text-brand" : "text-white/50"}`}>
-                    {t.label}
+                    {t(`setup.theme.${theme.id}`)}
                   </span>
                   {active && (
                     <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-brand" />
@@ -196,7 +223,7 @@ export default function Setup() {
           </div>
           {isRoyale && (
             <p className="mt-2 text-[11px] text-amber-300/65 px-0.5">
-              ⚔️ Royale funciona apenas em modo Cego.
+              {t("setup.royaleNote")}
             </p>
           )}
         </motion.section>
@@ -207,7 +234,7 @@ export default function Setup() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14, duration: 0.28 }}
         >
-          <div className="section-title">Modo</div>
+          <div className="section-title">{t("setup.mode")}</div>
           <div className="grid grid-cols-2 gap-2">
             {(["normal", "cego"] as const).map((m) => {
               const active = room.mode === m;
@@ -224,15 +251,15 @@ export default function Setup() {
                     }
                     ${locked ? "opacity-25 cursor-not-allowed" : ""}`}
                 >
-                  {m === "normal" ? "Normal" : "Cego"}
+                  {m === "normal" ? t("setup.mode.normal") : t("setup.mode.cego")}
                 </button>
               );
             })}
           </div>
           <p className="mt-2 text-[11px] text-white/30 px-0.5">
             {room.mode === "cego"
-              ? "O impostor não vê nenhuma palavra."
-              : "O impostor recebe uma palavra diferente."}
+              ? t("setup.mode.cegoDesc")
+              : t("setup.mode.normalDesc")}
           </p>
         </motion.section>
 
@@ -242,17 +269,17 @@ export default function Setup() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.17, duration: 0.28 }}
         >
-          <div className="section-title">Extras</div>
+          <div className="section-title">{t("setup.extras")}</div>
           <div className="space-y-2">
             <ToggleRow
-              label="Última Chance"
-              description="Se apanhado, o impostor tenta adivinhar a palavra"
+              label={t("setup.lastChance")}
+              description={t("setup.lastChanceDesc")}
               checked={room.lastChance}
               onChange={(v) => setRoom({ lastChance: v })}
             />
             <ToggleRow
-              label="Dois Impostores"
-              description={room.players.length < 5 ? "Precisas de pelo menos 5 jogadores" : "Dois jogadores são impostores"}
+              label={t("setup.twoImpostors")}
+              description={room.players.length < 5 ? t("setup.twoImpostorsNeed") : t("setup.twoImpostorsDesc")}
               checked={room.twoImpostors}
               onChange={(v) => setRoom({ twoImpostors: v })}
               disabled={room.players.length < 5}
@@ -266,7 +293,7 @@ export default function Setup() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.20, duration: 0.28 }}
         >
-          <div className="section-title">Temporizador</div>
+          <div className="section-title">{t("setup.timer")}</div>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-4 px-4">
             {TIMER_STEPS.map((s) => {
               const active = room.timerSec === s;
@@ -308,7 +335,7 @@ export default function Setup() {
             disabled={!canPlay}
             onClick={startGame}
           >
-            {canPlay ? "Começar jogo" : "Adiciona pelo menos 3 jogadores"}
+            {canPlay ? t("setup.start") : t("setup.needPlayers")}
           </motion.button>
         </div>
       </div>

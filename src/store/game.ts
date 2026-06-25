@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getNextWords } from "@/services/wordManager";
+import { translate, type Lang } from "@/i18n/translations";
 
 export type Phase = "setup" | "assign" | "round" | "vote" | "vote2" | "lastchance" | "result";
 
@@ -36,7 +37,9 @@ export interface GameState {
   room: RoomState;
   round: RoundState | null;
   toast: Toast | null;
+  lang: Lang;
 
+  setLang: (lang: Lang) => void;
   setRoom: (patch: Partial<RoomState>) => void;
   toPhase: (p: Phase) => void;
   startGame: () => void;
@@ -86,6 +89,9 @@ export const useGameStore = create<GameState>()(
       room: initialRoom,
       round: null,
       toast: null,
+      lang: "pt",
+
+      setLang: (lang) => set({ lang }),
 
       setRoom: (patch) =>
         set((s) => ({
@@ -139,7 +145,8 @@ export const useGameStore = create<GameState>()(
             });
 
             if (exhausted) {
-              setTimeout(() => get().showToast("Tema esgotado — repõe o histórico ou muda de tema.", "warning"), 0);
+              const msg = translate(get().lang, "toast.themeExhausted");
+              setTimeout(() => get().showToast(msg, "warning"), 0);
             }
           } catch (e) {
             console.error("Erro ao obter palavras:", e);
@@ -212,7 +219,7 @@ export const useGameStore = create<GameState>()(
     {
       name: "impostor-game-store",
       storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ ui: s.ui, room: s.room, round: s.round }),
+      partialize: (s) => ({ ui: s.ui, room: s.room, round: s.round, lang: s.lang }),
     }
   )
 );

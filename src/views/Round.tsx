@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGameStore } from "@/store/game";
+import { useT } from "@/i18n";
 import { playerEmoji } from "@/utils/playerEmoji";
 
 function formatTime(total: number) {
@@ -14,10 +15,11 @@ export default function Round() {
   const timerSetting   = useGameStore((s) => s.room.timerSec);
   const players        = useGameStore((s) => s.room.players);
   const firstPlayerIdx = useGameStore((s) => s.round?.firstPlayerIndex ?? 0);
+  const t              = useT();
 
   const firstPlayerName = useMemo(
-    () => players?.[firstPlayerIdx] ?? `Jogador ${firstPlayerIdx + 1}`,
-    [players, firstPlayerIdx]
+    () => players?.[firstPlayerIdx] ?? t("common.playerFallback", { n: firstPlayerIdx + 1 }),
+    [players, firstPlayerIdx, t]
   );
 
   const [seconds, setSeconds] = useState<number>(() => Math.max(0, timerSetting));
@@ -93,8 +95,8 @@ export default function Round() {
         >
           💬
         </motion.div>
-        <h1 className="text-2xl font-bold tracking-tight">Discussão</h1>
-        <p className="mt-1 text-sm text-white/40">Descubram o impostor sem revelar a palavra</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("round.title")}</h1>
+        <p className="mt-1 text-sm text-white/40">{t("round.subtitle")}</p>
       </motion.header>
 
       <main className="screen flex-1 px-4 pb-28 flex flex-col items-center">
@@ -105,7 +107,7 @@ export default function Round() {
           transition={{ delay: 0.15, duration: 0.28 }}
           className="mt-4 flex flex-col items-center gap-2"
         >
-          <p className="text-[10px] uppercase tracking-[0.12em] text-white/30">Começa a falar</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-white/30">{t("round.startsSpeaking")}</p>
           <div className="inline-flex items-center gap-2.5 rounded-full border border-brand/30 bg-brand/[0.07] px-4 py-2 shadow-[0_0_18px_rgba(239,68,68,0.10)]">
             <span className="text-xl leading-none">{playerEmoji(firstPlayerIdx)}</span>
             <span className="font-semibold text-[15px] text-white">{firstPlayerName}</span>
@@ -142,7 +144,7 @@ export default function Round() {
               <motion.button
                 key={isDone ? "done" : running ? "running" : "paused"}
                 aria-live="polite"
-                aria-label={running ? "Pausar temporizador" : "Retomar temporizador"}
+                aria-label={running ? t("round.pauseAria") : t("round.resumeAria")}
                 onClick={() => hasTimer && !isDone && setRunning((r) => !r)}
                 className={`relative tabular-nums font-black leading-none select-none transition-colors duration-300
                   text-[clamp(80px,28vw,172px)] ${timerColor}
@@ -172,7 +174,7 @@ export default function Round() {
               transition={{ delay: 0.5 }}
               className="mt-3 text-xs text-white/35"
             >
-              {running ? "Toca para pausar" : "Toca para retomar"}
+              {running ? t("round.tapToPause") : t("round.tapToResume")}
             </motion.p>
           )}
 
@@ -186,7 +188,7 @@ export default function Round() {
                 transition={{ type: "spring", stiffness: 320, damping: 24 }}
                 className="mt-4 px-4 py-2 rounded-full border border-rose-500/40 bg-rose-500/15 text-rose-300 text-sm font-semibold"
               >
-                ⏰ Tempo esgotado!
+                {t("round.timeUp")}
               </motion.div>
             )}
           </AnimatePresence>
@@ -197,7 +199,7 @@ export default function Round() {
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 text-sm text-white/30"
             >
-              Está na hora de votar
+              {t("round.timeToVote")}
             </motion.p>
           )}
         </motion.div>
@@ -212,7 +214,7 @@ export default function Round() {
             whileTap={{ scale: 0.97 }}
             onClick={() => toPhase("vote")}
           >
-            Votar
+            {t("round.vote")}
           </motion.button>
         </div>
       </div>

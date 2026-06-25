@@ -15,11 +15,12 @@ export default function Toast() {
   const toast      = useGameStore((s) => s.toast);
   const clearToast = useGameStore((s) => s.clearToast);
 
+  const toastId = toast?.id;
   useEffect(() => {
-    if (!toast) return;
+    if (toastId == null) return;
     const t = setTimeout(clearToast, AUTO_DISMISS_MS);
     return () => clearTimeout(t);
-  }, [toast?.id, clearToast]);
+  }, [toastId, clearToast]);
 
   return (
     <AnimatePresence>
